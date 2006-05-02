@@ -1,0 +1,72 @@
+NAME
+    Text::MeCab - Alternate Interface To libmecab
+
+SYNOPSIS
+      use Text::MeCab;
+      my $mecab = Text::MeCab->new({
+        rcfile => $rcfile,
+        dicdir => $dicdir,
+        uuserdic => $userdic,
+        lattice_level => $lattice_level,
+        all_morphs    => $all_morphs,
+        output_format_type => $output_format_type,
+        partial            => $partial,
+        node_format        => $node_format,
+        unk_format         => $unk_format,
+        bos_format         => $bos_format,
+        eos_format         => $eos_format,
+        input_buffer_size  => $input_buffer_soap,
+        allocate_sentence  => $allocate_sentence,
+        nbest              => $nbest,
+        theta              => $theta,
+      });
+
+      for (my $node = $mecab->parse($text); $node; $node = $node->next) {
+         # See perdoc for Text::MeCab::Node for list of methods
+         print $node->surface, "\n";
+      }
+
+      # use constants
+      use Text::MeCab qw(:all);
+      use Text::MeCab qw(MECAB_NODE_NODE);
+
+DESCRIPTION
+    libmecab (http://mecab.sourceforge.ne.jp) already has a perl interface
+    built with it, so why a new module? I just feel that while a subtle
+    difference, making the perl interface through a tied hash is just...
+    weird.
+
+    So Text::MeCab gives you a more naturally Perl way to access libmecab!
+
+METHODS
+  new HASHREF
+    Creates a new Text::MeCab instance. You can specify most the options
+    that you could normally pass to the command line "mecab" command.
+
+    Below is the list of accepted options. See the man page for mecab for
+    details about each option.
+
+    rcfile
+    dicdir
+    lattice_level
+    all_morphs
+    output_format_type
+    partial
+    node_format
+    unk_format
+    bos_format
+    eos_format
+    input_buffer_size
+    allocate_sentence
+    nbest
+    theta
+
+  parse SCALAR
+    Parses the given text via mecab, and returns a mecab node object.
+
+SEE ALSO
+    http://mecab.sourceforge.ne.jp
+
+AUTHOR
+    (c) 2006 Daisuke Maki <dmaki@cpan.org> All rights reserved.
+

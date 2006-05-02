@@ -1,0 +1,14 @@
+---
+name: Text-MeCab
+version: 0.01
+author:
+  - |-
+    (c) 2006 Daisuke Maki E<lt>dmaki@cpan.orgE<gt>
+    All rights reserved.
+abstract: Alternate Interface To libmecab
+license: perl
+provides:
+  Text::MeCab:
+    file: lib/Text/MeCab.pm
+    version: 0.01
+generated_by: Module::Build version 0.2612

@@ -1,0 +1,12 @@
+benchmark.pl
+Build.PL
+Changes
+lib/Text/MeCab.pm
+lib/Text/MeCab.xs
+lib/Text/MeCab/Node.pod
+MANIFEST			This list of files
+t/01-sanity.t
+t/02-basic.t
+META.yml
+Makefile.PL
+README
