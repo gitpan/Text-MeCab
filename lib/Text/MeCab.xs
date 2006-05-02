@@ -40,7 +40,7 @@ init_constants()
 {
     HV *stash;
 
-    stash = gv_stashpv("Text::MeCab::Node", 1);
+    stash = gv_stashpv("Text::MeCab", 1);
     newCONSTSUB(stash, "MECAB_NOR_NODE", newSViv(MECAB_NOR_NODE));
     newCONSTSUB(stash, "MECAB_UNK_NODE", newSViv(MECAB_UNK_NODE));
     newCONSTSUB(stash, "MECAB_BOS_NODE", newSViv(MECAB_BOS_NODE));
@@ -55,7 +55,7 @@ BOOT:
     init_constants();
 
 SV *
-new(class, opts = NULL)
+_new(class, opts = NULL)
         SV *class;
         HV *opts;
     INIT:
@@ -69,6 +69,9 @@ new(class, opts = NULL)
         STRLEN    len;
     CODE:
         if (opts != NULL) {
+            if (SvTYPE(opts) == SVt_PVHV)
+
+
             argc = 0;
             /* MAX argv size = 16 */
             Newz(1234, argv, MECAB_ARGV_MAX, char *);
@@ -97,6 +100,48 @@ new(class, opts = NULL)
 
             Safefree(argv);
         }
+
+        sv = newSViv(PTR2IV(mecab));
+        sv = newRV_noinc(sv);
+        sv_bless(sv, gv_stashpv(SvPV_nolen(class), 1));
+        SvREADONLY_on(sv);
+
+        RETVAL = sv;
+    OUTPUT:
+        RETVAL
+
+SV *
+_new_optarg(class, args)
+        SV *class;
+        AV *args;
+    INIT:
+        SV *sv;
+        SV **svr;
+        char **argv;
+        mecab_t *mecab;
+        int i;
+        int len;
+    CODE:
+        len = av_len(args);
+        Newz(1234, argv, len, char *);
+
+        for(i = 0; i <= len; i++) {
+            svr = av_fetch(args, i, 0);
+            if (svr == NULL) {
+                Safefree(argv);
+                croak("bad index");
+            }
+
+            if (SvROK(*svr)) {
+                Safefree(argv);
+                croak("arguments must be simple scalars");
+            }
+
+            argv[i] = SvPV_nolen(*svr);
+        }
+
+        mecab = mecab_new(len, argv);
+        Safefree(argv);
 
         sv = newSViv(PTR2IV(mecab));
         sv = newRV_noinc(sv);
