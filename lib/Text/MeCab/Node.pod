@@ -14,8 +14,6 @@ Text::MeCab::Node - MeCab Node Object
   $node->rlength;
   $node->feature;
   $node->next;
-  $node->enext;
-  $node->bnext;
   $node->prev;
   $node->rcattr;
   $node->lcattr;

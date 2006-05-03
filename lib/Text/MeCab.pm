@@ -1,4 +1,4 @@
-# $Id: MeCab.pm 4 2006-05-02 04:38:09Z daisuke $
+# $Id: MeCab.pm 5 2006-05-03 16:07:16Z daisuke $
 #
 # Copyright (c) 2006 Daisuke Maki <dmaki@cpan.org>
 # All rights reserved.

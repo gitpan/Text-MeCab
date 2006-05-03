@@ -1,15 +1,25 @@
 Changes
 =======
 
+0.02_02 - 04 May 2006
+  - Fix tools/probe_mecab.pl such that it prompts the user for some
+    required parameters when installing on Windows.
+  - Try fixing Makefile.PL once again.
+  - Explicitly make copies of mecab_node_t in the XS, so that you
+    can now manipulate the nodes even *after* your instance of
+    Text::MeCab has gone away
+
 0.02_01 - 03 May 2006
   - Hey, I didn't know people were going to jump on to this module,
     seriously... 
 
-  - Fix building when using Makefile.PL instead of Build.PL.
-    (refactor important bits to tools/probe_mecab.pl)
+  - Fix building when using Makefile.PL instead of Build.PL
+    (refactor important bits to tools/probe_mecab.pl).
   - Attempt to work with MeCab < 0.90.
-  - Move benchmark.pl to tools/benchmark.pl
-  - Fix problem caused by Text::MeCab->new() (no parameters)
+  - Move benchmark.pl to tools/benchmark.pl.
+  - Fix problem caused by Text::MeCab->new() (no parameters).
+  - Add Text::MeCab::MECAB_VERSION to display the mecab version
+    we compiled against.
 
   TODO:
   - Try to at least give out a warning when executing a code like this:

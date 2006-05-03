@@ -38,7 +38,7 @@ sub text_mecab {
     }
 }
 
-cmpthese(1000, {
+cmpthese(100, {
     mecab => \&mecab,
     text_mecab => \&text_mecab,
 });
