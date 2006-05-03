@@ -1,4 +1,4 @@
-# $Id: MeCab.pm 5 2006-05-03 16:07:16Z daisuke $
+# $Id: MeCab.pm 9 2006-05-03 17:40:54Z daisuke $
 #
 # Copyright (c) 2006 Daisuke Maki <dmaki@cpan.org>
 # All rights reserved.
@@ -84,7 +84,7 @@ Text::MeCab - Alternate Interface To libmecab
   my $mecab = Text::MeCab->new("--userdic=/foo/bar/baz", "-P");
 
   # check what mecab version we compiled against?
-  print "Compiled with ", Text::MeCab::MECAB_VERSION, "\n";
+  print "Compiled with ", &Text::MeCab::MECAB_VERSION, "\n";
 
 =head1 DESCRIPTION
 
@@ -140,7 +140,34 @@ details about each option.
 
 =head2 parse SCALAR
 
-Parses the given text via mecab, and returns a mecab node object.
+Parses the given text via mecab, and returns a Text::MeCab::Node object.
+
+=head1 NOTES ABOUT PARSED STRUCTURE
+
+Please note that Text::MeCab::parse() creates Text::MeCab::Node objects that 
+are C<detatched> from libmecab Tagger. This is to allow these Perl-ish idioms:
+
+  my $node;
+  {
+     my $mecab = Text::MeCab->new;
+     $node = $mecab->parse($text);
+     # $mecab goes out of scope
+  }
+
+  for(; $node; $node = $node->next) {
+     print $node->surface, "\n";
+  }
+
+and,
+
+  my $mecab  = Text::MeCab->new;
+  my $node_A = $mecab->parse($text_A);
+  my $node_B = $mecab->parse($text_B);
+
+If we are to use the mecab nodes directly we would have to carefully control
+the scope between the mecab tagger object and the nodes. Since this is perl,
+I chose maniplexity over efficiency. Let me know if there are problems with
+this approach.
 
 =head1 SEE ALSO
 

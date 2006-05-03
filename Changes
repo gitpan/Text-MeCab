@@ -1,6 +1,11 @@
 Changes
 =======
 
+0.02_03 - 04 May 2006
+  - Correct reference counting for prev().
+  - Add tests for detatched Text::MeCab::Node.
+  - Tweak docs
+
 0.02_02 - 04 May 2006
   - Fix tools/probe_mecab.pl such that it prompts the user for some
     required parameters when installing on Windows.

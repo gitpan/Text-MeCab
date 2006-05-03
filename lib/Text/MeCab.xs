@@ -1,4 +1,4 @@
-/* $Id: MeCab.xs 8 2006-05-03 17:17:53Z daisuke $
+/* $Id: MeCab.xs 9 2006-05-03 17:40:54Z daisuke $
  *
  * Copyright (c) 2006 Daisuke Maki <dmaki@cpan.org>
  * All rights reserved.
@@ -323,11 +323,17 @@ prev(self)
     INIT:
         SV *sv;
         xs_mecab_node_t *node;
+        xs_mecab_node_t *head;
     CODE:
         node = XS_STATE(xs_mecab_node_t *, self);
         if (node->prev == NULL) {
             sv = &PL_sv_undef;
         } else {
+            head = node;
+            while (head->prev)
+                head = head->prev;
+            head->refcnt++;
+
             sv = newSViv(PTR2IV(node->prev));
             sv = newRV_noinc(sv);
             sv_bless(sv, gv_stashpv("Text::MeCab::Node", 1));
