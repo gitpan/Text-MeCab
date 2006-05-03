@@ -33,6 +33,9 @@ SYNOPSIS
       # want to use a command line arguments?
       my $mecab = Text::MeCab->new("--userdic=/foo/bar/baz", "-P");
 
+      # check what mecab version we compiled against?
+      print "Compiled with ", Text::MeCab::MECAB_VERSION, "\n";
+
 DESCRIPTION
     libmecab (http://mecab.sourceforge.ne.jp) already has a perl interface
     built with it, so why a new module? I just feel that while a subtle

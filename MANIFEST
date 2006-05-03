@@ -1,4 +1,3 @@
-benchmark.pl
 Build.PL
 Changes
 lib/Text/MeCab.pm
@@ -10,3 +9,5 @@ t/02-basic.t
 META.yml
 Makefile.PL
 README
+tools/probe_mecab.pl
+tools/benchmark.pl

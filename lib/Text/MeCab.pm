@@ -1,4 +1,4 @@
-# $Id: MeCab.pm 3 2006-05-02 02:29:14Z daisuke $
+# $Id: MeCab.pm 4 2006-05-02 04:38:09Z daisuke $
 #
 # Copyright (c) 2006 Daisuke Maki <dmaki@cpan.org>
 # All rights reserved.
@@ -28,7 +28,18 @@ BEGIN
 sub new
 {
     my $class = shift;
-    return (ref($_[0]) eq 'HASH') ? $class->_new(@_) : $class->_new_optarg(\@_);
+    my @args;
+    if (ref($_[0]) ne 'HASH') {
+        @args = @_;
+    } else {
+        my %args = %{$_[0]};
+        while (my ($key, $value) = each %args) {
+            $key =~ s/_/-/g;
+            push @args, "--$key=$value";
+        }
+    }
+
+    return $class->xs_new(\@args);
 }
 
 1;
@@ -71,6 +82,9 @@ Text::MeCab - Alternate Interface To libmecab
 
   # want to use a command line arguments?
   my $mecab = Text::MeCab->new("--userdic=/foo/bar/baz", "-P");
+
+  # check what mecab version we compiled against?
+  print "Compiled with ", Text::MeCab::MECAB_VERSION, "\n";
 
 =head1 DESCRIPTION
 

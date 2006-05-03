@@ -1,4 +1,4 @@
-/* $Id: MeCab.xs 2 2006-05-02 02:11:10Z daisuke $
+/* $Id: MeCab.xs 4 2006-05-02 04:38:09Z daisuke $
  *
  * Copyright (c) 2006 Daisuke Maki <dmaki@cpan.org>
  * All rights reserved.
@@ -14,37 +14,19 @@
 
 #define MECAB_ARGV_MAX 16
 
-#define GETOPT_PVN(opts, name, mecab_name) \
-    svr = hv_fetch(opts, name, strlen(name), 0); \
-    if (svr != NULL) { \
-        tmp = SvPV(*svr, len); \
-        Newz(1234, argv[argc], strlen(mecab_name) + len + 3, char); \
-        sprintf(argv[argc++], "--%s=%s", mecab_name, tmp); \
-    }
-
-#define GETOPT_PV(opts, name) \
-    GETOPT_PVN(opts, name, name)
-
-#define GETOPT_BOOLN(opts, name, mecab_name) \
-    svr = hv_fetch(opts, name, strlen(name), 0); \
-    if (svr != NULL && SvTRUE(*svr)) { \
-        Newz(1234, argv[argc], strlen(mecab_name) + 2, char); \
-        sprintf(argv[argc++], "--%s", mecab_name); \
-    }
-
-#define GETOPT_BOOL(opts, name) \
-    GETOPT_BOOLN(opts, name, name)
-        
 static void
 init_constants()
 {
     HV *stash;
-
     stash = gv_stashpv("Text::MeCab", 1);
+
+    newCONSTSUB(stash, "MECAB_VERSION", newSVnv(MECAB_MAJOR_VERSION + MECAB_MINOR_VERSION / 100.0));
+#if MECAB_MAJOR_VERSION > 0 || MECAB_MINOR_VERSION >= 90
     newCONSTSUB(stash, "MECAB_NOR_NODE", newSViv(MECAB_NOR_NODE));
     newCONSTSUB(stash, "MECAB_UNK_NODE", newSViv(MECAB_UNK_NODE));
     newCONSTSUB(stash, "MECAB_BOS_NODE", newSViv(MECAB_BOS_NODE));
     newCONSTSUB(stash, "MECAB_EOS_NODE", newSViv(MECAB_EOS_NODE));
+#endif
 }
 
 MODULE = Text::MeCab               PACKAGE = Text::MeCab
@@ -55,63 +37,7 @@ BOOT:
     init_constants();
 
 SV *
-_new(class, opts = NULL)
-        SV *class;
-        HV *opts;
-    INIT:
-        SV *sv;
-        SV **svr;
-        char     *tmp;
-        char    **argv;
-        int       argc;
-        int       i;
-        mecab_t  *mecab;
-        STRLEN    len;
-    CODE:
-        if (opts != NULL) {
-            if (SvTYPE(opts) == SVt_PVHV)
-
-
-            argc = 0;
-            /* MAX argv size = 16 */
-            Newz(1234, argv, MECAB_ARGV_MAX, char *);
- 
-            GETOPT_PV(opts, "rcfile");
-            GETOPT_PV(opts, "dicdir");
-            GETOPT_PV(opts, "userdir");
-            GETOPT_PVN(opts, "lattice_level", "lattice-level");
-            GETOPT_BOOLN(opts, "all_morphs", "all-morphs");
-            GETOPT_PVN(opts, "output_format_type", "output-format-type");
-            GETOPT_BOOL(opts, "partial");
-            GETOPT_PVN(opts, "node_format", "node-format");
-            GETOPT_PVN(opts, "unk_format", "unk-format");
-            GETOPT_PVN(opts, "bos_format", "bos-format");
-            GETOPT_PVN(opts, "eos_format", "eos-format");
-            GETOPT_PVN(opts, "input_buffer_size", "input-buffer-size");
-            GETOPT_BOOLN(opts, "allocate_sentence", "allocate-sentence");
-            GETOPT_PV(opts, "nbest");
-            GETOPT_PV(opts, "theta");
-        }
-
-        mecab = mecab_new(argc, argv);
-        if (opts != NULL) {
-            for(i = 0; i < MECAB_ARGV_MAX; i++)
-                Safefree(argv[i]);
-
-            Safefree(argv);
-        }
-
-        sv = newSViv(PTR2IV(mecab));
-        sv = newRV_noinc(sv);
-        sv_bless(sv, gv_stashpv(SvPV_nolen(class), 1));
-        SvREADONLY_on(sv);
-
-        RETVAL = sv;
-    OUTPUT:
-        RETVAL
-
-SV *
-_new_optarg(class, args)
+xs_new(class, args)
         SV *class;
         AV *args;
     INIT:
@@ -122,16 +48,16 @@ _new_optarg(class, args)
         int i;
         int len;
     CODE:
-        len = av_len(args);
-        Newz(1234, argv, len, char *);
-
-        for(i = 0; i <= len; i++) {
+        len = av_len(args) + 1;
+        Newz(1234, argv, len + 1, char *);
+    
+        for(i = 0; i < len; i++) {
             svr = av_fetch(args, i, 0);
             if (svr == NULL) {
                 Safefree(argv);
                 croak("bad index");
             }
-
+    
             if (SvROK(*svr)) {
                 Safefree(argv);
                 croak("arguments must be simple scalars");
@@ -139,6 +65,7 @@ _new_optarg(class, args)
 
             argv[i] = SvPV_nolen(*svr);
         }
+        argv[i] = "--allocate-sentence";
 
         mecab = mecab_new(len, argv);
         Safefree(argv);
@@ -200,7 +127,6 @@ id(self)
         mecab_node_t *node;
     CODE:
         node = XS_STATE(mecab_node_t *, self);
-
         RETVAL = newSViv(node->id);
     OUTPUT:
         RETVAL
@@ -224,8 +150,12 @@ rlength(self)
         SV *sv;
         mecab_node_t *node;
     CODE:
+#if MECAB_MAJOR_VERSION > 0 || MECAB_MINOR_VERSION >= 90
         node = XS_STATE(mecab_node_t *, self);
         RETVAL = newSViv(node->rlength);
+#else
+        croak("rlength() is not available for mecab < 0.90");
+#endif
     OUTPUT:
         RETVAL
 
@@ -237,7 +167,7 @@ feature(self)
         mecab_node_t *node;
     CODE:
         node = XS_STATE(mecab_node_t *, self);
-        RETVAL = newSVpv(node->feature, 0);
+        RETVAL = newSVpvf("%s",node->feature);
     OUTPUT:
         RETVAL
 
@@ -249,8 +179,7 @@ surface(self)
         mecab_node_t *node;
     CODE:
         node = XS_STATE(mecab_node_t *, self);
-
-        RETVAL = newSVpv(node->surface, node->length);
+        RETVAL = newSVpvf("%s", node->surface);
     OUTPUT:
         RETVAL
 
@@ -262,6 +191,7 @@ next(self)
         mecab_node_t *node;
     CODE:
         node = XS_STATE(mecab_node_t *, self);
+
         if (node->next == NULL) {
             sv = &PL_sv_undef;
         } else {
@@ -282,6 +212,7 @@ enext(self)
         SV *sv;
         mecab_node_t *node;
     CODE:
+#if MECAB_MAJOR_VERSION > 0 || MECAB_MINOR_VERSION >= 90
         node = XS_STATE(mecab_node_t *, self);
         if (node->enext == NULL) {
             sv = &PL_sv_undef;
@@ -293,6 +224,9 @@ enext(self)
         }
 
         RETVAL = sv;
+#else
+        croak("enext() not available for mecab < 0.90");
+#endif
     OUTPUT:
         RETVAL
 
@@ -303,6 +237,7 @@ bnext(self)
         SV *sv;
         mecab_node_t *node;
     CODE:
+#if MECAB_MAJOR_VERSION > 0 || MECAB_MINOR_VERSION >= 90
         node = XS_STATE(mecab_node_t *, self);
         if (node->bnext == NULL) {
             sv = &PL_sv_undef;
@@ -314,6 +249,9 @@ bnext(self)
         }
 
         RETVAL = sv;
+#else
+        croak("bnext() not available for mecab < 0.90");
+#endif
     OUTPUT:
         RETVAL
 
@@ -344,8 +282,12 @@ rcattr(self)
     INIT:
         mecab_node_t *node;
     CODE:
+#if MECAB_MAJOR_VERSION > 0 || MECAB_MINOR_VERSION >= 90
         node = XS_STATE(mecab_node_t *, self);
         RETVAL = newSViv(node->rcAttr);
+#else
+        croak("rcattr() not availabel for mecab < 0.90");
+#endif
     OUTPUT:
         RETVAL
 
@@ -355,8 +297,12 @@ lcattr(self)
     INIT:
         mecab_node_t *node;
     CODE:
+#if MECAB_MAJOR_VERSION > 0 || MECAB_MINOR_VERSION >= 90
         node = XS_STATE(mecab_node_t *, self);
         RETVAL = newSViv(node->lcAttr);
+#else
+        croak("lcattr() not available for mecab < 0.90");
+#endif
     OUTPUT:
         RETVAL
 
@@ -377,8 +323,12 @@ isbest(self)
     INIT:
         mecab_node_t *node;
     CODE:
+#if MECAB_MAJOR_VERSION > 0 || MECAB_MINOR_VERSION >= 90
         node = XS_STATE(mecab_node_t *, self);
         RETVAL = node->isbest == 1 ? &PL_sv_yes : &PL_sv_no;
+#else
+        croak("isbest() not availale for mecab < 0.90");
+#endif
     OUTPUT:
         RETVAL
 
@@ -388,8 +338,12 @@ alpha(self)
     INIT:
         mecab_node_t *node;
     CODE:
+#if MECAB_MAJOR_VERSION > 0 || MECAB_MINOR_VERSION >= 90
         node = XS_STATE(mecab_node_t *, self);
         RETVAL = newSVnv(node->alpha);
+#else
+        croak("alpha() not available for mecab < 0.90");
+#endif
     OUTPUT:
         RETVAL
 
@@ -399,8 +353,12 @@ beta(self)
     INIT:
         mecab_node_t *node;
     CODE:
+#if MECAB_MAJOR_VERSION > 0 || MECAB_MINOR_VERSION >= 90
         node = XS_STATE(mecab_node_t *, self);
         RETVAL = newSVnv(node->beta);
+#else
+        croak("beta() not available for mecab < 0.90");
+#endif
     OUTPUT:
         RETVAL
 
@@ -410,11 +368,14 @@ prob(self)
     INIT:
         mecab_node_t *node;
     CODE:
+#if MECAB_MAJOR_VERSION > 0 || MECAB_MINOR_VERSION >= 90
         node = XS_STATE(mecab_node_t *, self);
         RETVAL = newSVnv(node->prob);
+#else
+        croak("prob() not available for mecab < 0.90");
+#endif
     OUTPUT:
         RETVAL
-
 
 SV *
 wcost(self)
@@ -422,11 +383,14 @@ wcost(self)
     INIT:
         mecab_node_t *node;
     CODE:
+#if MECAB_MAJOR_VERSION > 0 || MECAB_MINOR_VERSION >= 90
         node = XS_STATE(mecab_node_t *, self);
         RETVAL = newSViv(node->wcost);
+#else
+        croak("wcost() not available for mecab < 0.90");
+#endif
     OUTPUT:
         RETVAL
-
 
 SV *
 cost(self)
@@ -438,5 +402,3 @@ cost(self)
         RETVAL = newSViv(node->cost);
     OUTPUT:
         RETVAL
-
-
