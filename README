@@ -15,7 +15,7 @@ SYNOPSIS
         unk_format         => $unk_format,
         bos_format         => $bos_format,
         eos_format         => $eos_format,
-        input_buffer_size  => $input_buffer_soap,
+        input_buffer_size  => $input_buffer_size,
         allocate_sentence  => $allocate_sentence,
         nbest              => $nbest,
         theta              => $theta,
@@ -28,7 +28,7 @@ SYNOPSIS
 
       # use constants
       use Text::MeCab qw(:all);
-      use Text::MeCab qw(MECAB_NODE_NODE);
+      use Text::MeCab qw(MECAB_NOR_NODE);
 
       # want to use a command line arguments?
       my $mecab = Text::MeCab->new("--userdic=/foo/bar/baz", "-P");

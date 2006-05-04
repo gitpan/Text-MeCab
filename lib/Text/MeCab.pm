@@ -8,7 +8,7 @@ use strict;
 use vars qw($VERSION @ISA %EXPORT_TAGS @EXPORT_OK);
 BEGIN
 {
-    $VERSION = '0.02';
+    $VERSION = '0.05';
     if ($] > 5.006) {
         require XSLoader;
         XSLoader::load(__PACKAGE__, $VERSION);
@@ -65,7 +65,7 @@ Text::MeCab - Alternate Interface To libmecab
     unk_format         => $unk_format,
     bos_format         => $bos_format,
     eos_format         => $eos_format,
-    input_buffer_size  => $input_buffer_soap,
+    input_buffer_size  => $input_buffer_size,
     allocate_sentence  => $allocate_sentence,
     nbest              => $nbest,
     theta              => $theta,
@@ -78,7 +78,7 @@ Text::MeCab - Alternate Interface To libmecab
 
   # use constants
   use Text::MeCab qw(:all);
-  use Text::MeCab qw(MECAB_NODE_NODE);
+  use Text::MeCab qw(MECAB_NOR_NODE);
 
   # want to use a command line arguments?
   my $mecab = Text::MeCab->new("--userdic=/foo/bar/baz", "-P");

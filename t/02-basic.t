@@ -10,12 +10,17 @@ BEGIN
 my $mecab = Text::MeCab->new({ all_morphs => 1 });
 ok($mecab);
 
+my @fields = qw(surface feature length cost);
+if (&Text::MeCab::MECAB_VERSION >= 0.90) {
+    push @fields, qw(rcattr lcattr stat isbest alpha beta prob wcost);
+}
+
 for (
     my $node = $mecab->parse("太郎は次郎が持っている本を花子に渡した。");
     $node;
     $node = $node->next
 ) {
-    foreach my $field qw(surface length rcattr lcattr stat isbest alpha beta prob wcost cost) {
+    foreach my $field (@fields) {
         my $p = eval { $node->$field };
         ok(!$@, "$field ok ($p)");
     }
@@ -29,7 +34,7 @@ for (
     $node;
     $node = $node->next
 ) {
-    foreach my $field qw(surface length rcattr lcattr stat isbest alpha beta prob wcost cost) {
+    foreach my $field (@fields) {
         my $p = eval { $node->$field };
         ok(!$@, "$field ok ($p)");
     }

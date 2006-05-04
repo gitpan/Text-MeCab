@@ -12,8 +12,6 @@
 #define XS_STATE(type, x) \
     INT2PTR(type, SvROK(x) ? SvIV(SvRV(x)) : SvIV(x))
 
-#define MECAB_ARGV_MAX 16
-
 typedef struct _xs_mecab_node_t {
   IV     refcnt;
   struct _xs_mecab_node_t  *prev;
