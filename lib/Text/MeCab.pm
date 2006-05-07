@@ -1,4 +1,4 @@
-# $Id: MeCab.pm 9 2006-05-03 17:40:54Z daisuke $
+# $Id: MeCab.pm 11 2006-05-07 16:38:07Z daisuke $
 #
 # Copyright (c) 2006 Daisuke Maki <dmaki@cpan.org>
 # All rights reserved.
@@ -8,7 +8,7 @@ use strict;
 use vars qw($VERSION @ISA %EXPORT_TAGS @EXPORT_OK);
 BEGIN
 {
-    $VERSION = '0.05';
+    $VERSION = '0.06';
     if ($] > 5.006) {
         require XSLoader;
         XSLoader::load(__PACKAGE__, $VERSION);
@@ -93,6 +93,10 @@ with it, so why a new module? I just feel that while a subtle difference,
 making the perl interface through a tied hash is just... weird.
 
 So Text::MeCab gives you a more natural, Perl-ish way to access libmecab!
+
+WARNING: Please note that this module is primarily targetted for libmecab
+>= 0.90, so if things seem to be broken and your libmecab version is below
+0.90, then you might want to consider upgrading libmecab first.
 
 =head1 METHODS
 

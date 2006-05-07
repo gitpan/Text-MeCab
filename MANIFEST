@@ -13,3 +13,4 @@ Makefile.PL
 README
 tools/probe_mecab.pl
 tools/benchmark.pl
+src/ppport.h

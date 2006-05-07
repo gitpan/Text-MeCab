@@ -1,5 +1,5 @@
 #!perl
-# $Id: probe_mecab.pl 6 2006-05-03 17:07:16Z daisuke $
+# $Id: probe_mecab.pl 11 2006-05-07 16:38:07Z daisuke $
 #
 # Copyright (c) 2006 Daisuke Maki <dmaki@cpan.org>
 # All rights reserved.
@@ -10,7 +10,7 @@ use File::Spec;
 my $interactive = -t STDIN && (-t STDOUT || !(-f STDOUT || -c STDOUT)) ;
 my($version, $cflags, $libs);
 # Save the poor puppies that run on Windows
-if ($^O eq 'Win32') {
+if ($^O eq 'MSWin32') {
     print <<EOM;
 You seem to be running on an environment that may not have mecab-config
 available. This script uses mecab-config to auto-probe 

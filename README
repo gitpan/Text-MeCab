@@ -45,6 +45,11 @@ DESCRIPTION
     So Text::MeCab gives you a more natural, Perl-ish way to access
     libmecab!
 
+    WARNING: Please note that this module is primarily targetted for
+    libmecab >= 0.90, so if things seem to be broken and your libmecab
+    version is below 0.90, then you might want to consider upgrading
+    libmecab first.
+
 METHODS
   new HASHREF | LIST
     Creates a new Text::MeCab instance.

@@ -1,4 +1,4 @@
-/* $Id: MeCab.xs 9 2006-05-03 17:40:54Z daisuke $
+/* $Id: MeCab.xs 11 2006-05-07 16:38:07Z daisuke $
  *
  * Copyright (c) 2006 Daisuke Maki <dmaki@cpan.org>
  * All rights reserved.
@@ -7,6 +7,10 @@
 #include "EXTERN.h"
 #include "perl.h"
 #include "XSUB.h"
+#define NEED_newCONSTSUB
+#define NEED_newRV_noinc
+#define NEED_sv_2pv_nolen
+#include "ppport.h"
 #include "mecab.h"
 
 #define XS_STATE(type, x) \
@@ -110,10 +114,10 @@ BOOT:
     init_constants();
 
 SV *
-xs_new(class, args)
+xs_new(class, args = NULL)
         SV *class;
         AV *args;
-    INIT:
+    PREINIT:
         SV *sv;
         SV **svr;
         char **argv;
@@ -121,8 +125,13 @@ xs_new(class, args)
         int i;
         int len;
     CODE:
+#if MECAB_MAJOR_VERSION > 0 || MECAB_MINOR_VERSION >= 90
         len = av_len(args) + 1;
-        Newz(1234, argv, len + 1, char *);
+#else
+        len = av_len(args);
+#endif
+        
+        Newz(1234, argv, len, char *);
     
         for(i = 0; i < len; i++) {
             svr = av_fetch(args, i, 0);
@@ -138,7 +147,9 @@ xs_new(class, args)
 
             argv[i] = SvPV_nolen(*svr);
         }
+#if MECAB_MAJOR_VERSION > 0 || MECAB_MINOR_VERSION >= 90
         argv[i] = "--allocate-sentence";
+#endif
 
         mecab = mecab_new(len, argv);
         Safefree(argv);
@@ -156,7 +167,7 @@ SV *
 parse(self, text)
         SV *self;
         SV *text;
-    INIT:
+    PREINIT:
         SV *sv;
         mecab_t *mecab;
         mecab_node_t *node;
@@ -169,7 +180,7 @@ parse(self, text)
         input = SvPV(text, len);
 
         if (len <= 0)
-            return XSRETURN_UNDEF;
+            XSRETURN_UNDEF;
 
         node = mecab_sparse_tonode(mecab, input);
 
@@ -188,7 +199,7 @@ parse(self, text)
 void
 DESTROY(self)
         SV *self;
-    INIT:
+    PREINIT:
         mecab_t *mecab;
     CODE:
         mecab = XS_STATE(mecab_t *, self);
@@ -201,7 +212,7 @@ PROTOTYPES: ENABLE
 SV *
 id(self)
         SV *self;
-    INIT:
+    PREINIT:
         SV *sv;
         xs_mecab_node_t *node;
     CODE:
@@ -213,7 +224,7 @@ id(self)
 SV *
 length(self)
         SV *self;
-    INIT:
+    PREINIT:
         SV *sv;
         xs_mecab_node_t *node;
     CODE:
@@ -225,7 +236,7 @@ length(self)
 SV *
 rlength(self)
         SV *self;
-    INIT:
+    PREINIT:
         SV *sv;
         xs_mecab_node_t *node;
     CODE:
@@ -241,7 +252,7 @@ rlength(self)
 SV *
 feature(self)
         SV *self;
-    INIT:
+    PREINIT:
         SV *sv;
         xs_mecab_node_t *node;
     CODE:
@@ -253,7 +264,7 @@ feature(self)
 SV *
 surface(self)
         SV *self;
-    INIT:
+    PREINIT:
         SV *sv;
         xs_mecab_node_t *node;
     CODE:
@@ -268,7 +279,7 @@ surface(self)
 SV *
 next(self)
         SV *self;
-    INIT:
+    PREINIT:
         SV *sv;
         xs_mecab_node_t *node;
         xs_mecab_node_t *head;
@@ -296,7 +307,7 @@ next(self)
 SV *
 enext(self)
         SV *self;
-    INIT:
+    PREINIT:
         SV *sv;
         xs_mecab_node_t *node;
     CODE:
@@ -307,7 +318,7 @@ enext(self)
 SV *
 bnext(self)
         SV *self;
-    INIT:
+    PREINIT:
         SV *sv;
         xs_mecab_node_t *node;
     CODE:
@@ -318,7 +329,7 @@ bnext(self)
 SV *
 prev(self)
         SV *self;
-    INIT:
+    PREINIT:
         SV *sv;
         xs_mecab_node_t *node;
         xs_mecab_node_t *head;
@@ -345,7 +356,7 @@ prev(self)
 SV *
 rcattr(self)
         SV *self;
-    INIT:
+    PREINIT:
         xs_mecab_node_t *node;
     CODE:
 #if MECAB_MAJOR_VERSION > 0 || MECAB_MINOR_VERSION >= 90
@@ -360,7 +371,7 @@ rcattr(self)
 SV *
 lcattr(self)
         SV *self;
-    INIT:
+    PREINIT:
         xs_mecab_node_t *node;
     CODE:
 #if MECAB_MAJOR_VERSION > 0 || MECAB_MINOR_VERSION >= 90
@@ -375,7 +386,7 @@ lcattr(self)
 SV *
 stat(self)
         SV *self;
-    INIT:
+    PREINIT:
         xs_mecab_node_t *node;
     CODE:
         node = XS_STATE(xs_mecab_node_t *, self);
@@ -386,7 +397,7 @@ stat(self)
 SV *
 isbest(self)
         SV *self;
-    INIT:
+    PREINIT:
         xs_mecab_node_t *node;
     CODE:
 #if MECAB_MAJOR_VERSION > 0 || MECAB_MINOR_VERSION >= 90
@@ -401,7 +412,7 @@ isbest(self)
 SV *
 alpha(self)
         SV *self;
-    INIT:
+    PREINIT:
         xs_mecab_node_t *node;
     CODE:
 #if MECAB_MAJOR_VERSION > 0 || MECAB_MINOR_VERSION >= 90
@@ -416,7 +427,7 @@ alpha(self)
 SV *
 beta(self)
         SV *self;
-    INIT:
+    PREINIT:
         xs_mecab_node_t *node;
     CODE:
 #if MECAB_MAJOR_VERSION > 0 || MECAB_MINOR_VERSION >= 90
@@ -431,7 +442,7 @@ beta(self)
 SV *
 prob(self)
         SV *self;
-    INIT:
+    PREINIT:
         xs_mecab_node_t *node;
     CODE:
 #if MECAB_MAJOR_VERSION > 0 || MECAB_MINOR_VERSION >= 90
@@ -446,7 +457,7 @@ prob(self)
 SV *
 wcost(self)
         SV *self;
-    INIT:
+    PREINIT:
         xs_mecab_node_t *node;
     CODE:
 #if MECAB_MAJOR_VERSION > 0 || MECAB_MINOR_VERSION >= 90
@@ -461,7 +472,7 @@ wcost(self)
 SV *
 cost(self)
         SV *self;
-    INIT:
+    PREINIT:
         xs_mecab_node_t *node;
     CODE:
         node = XS_STATE(xs_mecab_node_t *, self);
@@ -472,7 +483,7 @@ cost(self)
 void
 DESTROY(self)
         SV *self;
-    INIT:
+    PREINIT:
         xs_mecab_node_t *xs_node;
         xs_mecab_node_t *tmp;
     CODE:

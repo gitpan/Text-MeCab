@@ -1,6 +1,14 @@
 Changes
 =======
 
+0.06 - 08 May 2006
+  - Require ExtUtils::MakeMaker >= 6.25 to avoid Build.PL being
+    executed after Makefile.PL
+  - Fix INIT -> PREINIT (reported by charsbar)
+  - Fix how XSRETURN_UNDEF was working (reported by charsbar)
+  - Fix tools/probe_mecab.pl (reported by charsbar)
+  - Use ppport.h.
+
 0.05 - 04 May 2006
   - Fix typos
   - Add tests to MANIFEST. argh.
