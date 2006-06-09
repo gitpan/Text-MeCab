@@ -1,5 +1,5 @@
 #!perl
-# $Id: Makefile.PL 11 2006-05-07 16:38:07Z daisuke $
+# $Id: /mirror/Text-MeCab/trunk/Makefile.PL 123 2006-05-07T16:38:07.535690Z daisuke  $
 #
 # Copyright (c) 2006 Daisuke Maki <dmaki@cpan.org>
 # All rights reserved.

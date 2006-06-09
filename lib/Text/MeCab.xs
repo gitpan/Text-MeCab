@@ -1,4 +1,4 @@
-/* $Id: MeCab.xs 11 2006-05-07 16:38:07Z daisuke $
+/* $Id: /mirror/Text-MeCab/trunk/lib/Text/MeCab.xs 124 2006-06-09T01:15:41.678498Z daisuke  $
  *
  * Copyright (c) 2006 Daisuke Maki <dmaki@cpan.org>
  * All rights reserved.
@@ -126,18 +126,17 @@ xs_new(class, args = NULL)
         int len;
     CODE:
 #if MECAB_MAJOR_VERSION > 0 || MECAB_MINOR_VERSION >= 90
-        len = av_len(args) + 1;
-#else
-        len = av_len(args);
+        av_push(args, newSVpv("--allocate-sentence", 0));
 #endif
+        len = av_len(args) + 1;
         
         Newz(1234, argv, len, char *);
-    
+
         for(i = 0; i < len; i++) {
             svr = av_fetch(args, i, 0);
             if (svr == NULL) {
                 Safefree(argv);
-                croak("bad index");
+                croak("bad index %d", i);
             }
     
             if (SvROK(*svr)) {
@@ -145,13 +144,12 @@ xs_new(class, args = NULL)
                 croak("arguments must be simple scalars");
             }
 
-            argv[i] = SvPV_nolen(*svr);
+            argv[i + 1] = SvPV_nolen(*svr);
         }
-#if MECAB_MAJOR_VERSION > 0 || MECAB_MINOR_VERSION >= 90
-        argv[i] = "--allocate-sentence";
-#endif
+        argv[0] = "perl-Text-MeCab";
 
         mecab = mecab_new(len, argv);
+
         Safefree(argv);
 
         sv = newSViv(PTR2IV(mecab));
@@ -183,6 +181,9 @@ parse(self, text)
             XSRETURN_UNDEF;
 
         node = mecab_sparse_tonode(mecab, input);
+        if (! node) {
+            croak("mecab returned with error: %s", mecab_strerror(mecab));
+        }
 
         xs_node = deep_node_copy(node);
         xs_node->refcnt = 1;

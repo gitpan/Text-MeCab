@@ -1,4 +1,4 @@
-# $Id: MeCab.pm 11 2006-05-07 16:38:07Z daisuke $
+# $Id: /mirror/Text-MeCab/trunk/lib/Text/MeCab.pm 124 2006-06-09T01:15:41.678498Z daisuke  $
 #
 # Copyright (c) 2006 Daisuke Maki <dmaki@cpan.org>
 # All rights reserved.
@@ -8,7 +8,7 @@ use strict;
 use vars qw($VERSION @ISA %EXPORT_TAGS @EXPORT_OK);
 BEGIN
 {
-    $VERSION = '0.06';
+    $VERSION = '0.07';
     if ($] > 5.006) {
         require XSLoader;
         XSLoader::load(__PACKAGE__, $VERSION);
@@ -25,6 +25,12 @@ BEGIN
     @EXPORT_OK = map { @$_ } values %EXPORT_TAGS;
 }
 
+my %bool_options = (
+    map { ($_, 'bool') } qw(
+        --all-morphs --partial --allocate-sentence --version --help
+    )
+);
+
 sub new
 {
     my $class = shift;
@@ -35,7 +41,12 @@ sub new
         my %args = %{$_[0]};
         while (my ($key, $value) = each %args) {
             $key =~ s/_/-/g;
-            push @args, "--$key=$value";
+            my $l_key = "--$key";
+            if ($bool_options{$l_key}) {
+                push @args, $l_key;
+            } else {
+                push @args, "$l_key=$value";
+            }
         }
     }
 

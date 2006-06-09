@@ -1,5 +1,5 @@
 #!perl
-# $Id: probe_mecab.pl 11 2006-05-07 16:38:07Z daisuke $
+# $Id: /mirror/Text-MeCab/trunk/tools/probe_mecab.pl 124 2006-06-09T01:15:41.678498Z daisuke  $
 #
 # Copyright (c) 2006 Daisuke Maki <dmaki@cpan.org>
 # All rights reserved.
@@ -58,8 +58,6 @@ EOM
     }
     
     if (!-f $mecab_config || ! -x _) {
-    
-    
         print STDERR "Can't proceed without mecab-config. Aborting...\n";
         exit 1;
     }

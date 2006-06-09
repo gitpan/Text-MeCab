@@ -1,14 +1,19 @@
 ---
 name: Text-MeCab
-version: 0.06
+version: 0.07
 author:
   - |-
     (c) 2006 Daisuke Maki E<lt>dmaki@cpan.orgE<gt>
     All rights reserved.
 abstract: Alternate Interface To libmecab
 license: perl
+resources:
+  license: http://dev.perl.org/licenses/
 provides:
   Text::MeCab:
     file: lib/Text/MeCab.pm
-    version: 0.06
-generated_by: Module::Build version 0.2612
+    version: 0.07
+generated_by: Module::Build version 0.28
+meta-spec:
+  url: http://module-build.sourceforge.net/META-spec-v1.2.html
+  version: 1.2
