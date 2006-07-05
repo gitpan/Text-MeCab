@@ -1,5 +1,5 @@
 #!perl
-# $Id: /mirror/Text-MeCab/trunk/tools/probe_mecab.pl 124 2006-06-09T01:15:41.678498Z daisuke  $
+# $Id: /mirror/Text-MeCab/trunk/tools/probe_mecab.pl 1621 2006-07-05T08:42:36.916180Z daisuke  $
 #
 # Copyright (c) 2006 Daisuke Maki <dmaki@cpan.org>
 # All rights reserved.
@@ -23,21 +23,21 @@ Since we can't auto-probe, you should specify the above three to proceed
 with compilation:
 EOM
 
-    print "Version of libmecab that you are compiling against (required)? [] ";
+    print "Version of libmecab that you are compiling against (e.g. 0.90)? (REQUIRED) [] ";
     $version = <STDIN>;
     chomp($version);
-    die "no version specified!" unless $version;
+    die "no version specified! cowardly refusing to proceed." unless $version;
 
-    print "Additional compiler flags? [] ";
+    print "Additional compiler flags (e.g. -DWin32 -Ic:\\path\\to\\mecab)? [] ";
     if ($interactive) {
         $cflags = <STDIN>;
         chomp($cflags);
     }
 
-    print "Additional linker flags? [] ";
+    print "Additional linker flags (e.g. -lc:\\path\\to\\mecab\\libmecab.lib? [] ";
     if ($interactive) {
         $libs = <STDIN>;
-        chomp($cflags);
+        chomp($libs);
     }
 } else {
     # try probing in places where we expect it to be
@@ -51,10 +51,12 @@ EOM
     }
     
     print "Path to mecab config? [$mecab_config] ";
-    my $tmp = <STDIN>;
-    chomp $tmp;
-    if ($tmp) {
-        $mecab_config = $tmp;
+    if ($interactive) {
+        my $tmp = <STDIN>;
+        chomp $tmp;
+        if ($tmp) {
+            $mecab_config = $tmp;
+        }
     }
     
     if (!-f $mecab_config || ! -x _) {
@@ -81,7 +83,13 @@ if ($version < 0.90) {
 
 my($major, $minor, $micro) = map { s/\D+//g; $_ } split(/\./, $version);
 $cflags .= " -DMECAB_MAJOR_VERSION=$major -DMECAB_MINOR_VERSION=$minor";
+
 print "Using compiler flags '$cflags'...\n";
-print "Using linker flags '$libs'...\n";
+
+if ($libs) {
+    print "Using linker flags '$libs'...\n";
+} else {
+    print "No linker flags specified\n";
+}
 
 return { cflags => $cflags, libs => $libs };

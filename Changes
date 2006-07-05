@@ -1,6 +1,12 @@
 Changes
 =======
 
+0.08 - 05 Jul 2006
+  - Apply suggestions by charsbar when prompting for compile/link options
+    for Win32
+    (and actually release the changes -- this has been sitting on my SVK
+     client for a month)
+
 0.07 - 09 Jun 2006
   - The way we were passing arguments to mecab_new() was totally wrong.
     Fixed.

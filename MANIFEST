@@ -12,5 +12,7 @@ t/01-sanity.t
 t/02-basic.t
 t/03-free.t
 t/04-consecutive.t
+t/99-pod.t
+t/99-pod-coverage.t
 tools/benchmark.pl
 tools/probe_mecab.pl
