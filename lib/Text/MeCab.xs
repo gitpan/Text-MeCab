@@ -1,4 +1,4 @@
-/* $Id: /mirror/Text-MeCab/trunk/lib/Text/MeCab.xs 124 2006-06-09T01:15:41.678498Z daisuke  $
+/* $Id: /mirror/Text-MeCab/trunk/lib/Text/MeCab.xs 2035 2006-07-11T17:50:38.222225Z daisuke  $
  *
  * Copyright (c) 2006 Daisuke Maki <dmaki@cpan.org>
  * All rights reserved.
@@ -16,10 +16,26 @@
 #define XS_STATE(type, x) \
     INT2PTR(type, SvROK(x) ? SvIV(SvRV(x)) : SvIV(x))
 
-typedef struct _xs_mecab_node_t {
-  IV     refcnt;
-  struct _xs_mecab_node_t  *prev;
-  struct _xs_mecab_node_t  *next;
+#define XS_STRUCT2OBJ(sv, class, obj) \
+    sv = newSViv(PTR2IV(obj));  \
+    sv = newRV_noinc(sv); \
+    sv_bless(sv, gv_stashpv(class, 1)); \
+    SvREADONLY_on(sv);
+
+/* Deep Copy Memory Management Strategy:
+ *
+ * When we call dclone(), we actually clone the *entire* node list.
+ * that is, we go back to the first node in the list, and start from
+ * there.
+ *
+ * When ->next, ->prev is called, we update the node->head struct's
+ * refcnt. When this refcnt is zero, we finally free the struct
+ */
+
+typedef struct _pmecab_node_clone_t {
+  struct _pmecab_node_clone_t  *prev;
+  struct _pmecab_node_clone_t  *next;
+  struct _pmecab_node_clone_head_t *head;
 /* Currently Unsupported */
 /*
   struct mecab_node_t  *enext; 
@@ -45,17 +61,43 @@ typedef struct _xs_mecab_node_t {
   float          prob;
   short          wcost;
 #endif
-} xs_mecab_node_t;
+} pmecab_node_clone_t;
 
-xs_mecab_node_t *
-deep_node_copy(mecab_node_t *node)
+typedef struct _pmecab_node_clone_head_t {
+    IV refcnt;
+    pmecab_node_clone_t *first;
+} pmecab_node_clone_head_t;
+
+void
+pmecab_free_node(pmecab_node_clone_t *node)
 {
-    xs_mecab_node_t *xs_node;
-    if (node == NULL)
-        return NULL;
+    pmecab_node_clone_head_t *head;
+    pmecab_node_clone_t      *tmp;
 
-    Newz(1234, xs_node, 1, xs_mecab_node_t);
+    if (node == NULL || node->head == NULL) { /* sanity */
+        return;
+    }
 
+    head = node->head;
+    head->refcnt--;
+
+    if (head->refcnt > 0)
+        return;
+
+    node = head->first;
+    while (node != NULL) {
+        tmp = node->next;
+        Safefree(node);
+        node = tmp;
+    }
+    Safefree(head);
+}
+
+pmecab_node_clone_t *
+pmecab_clone_node(mecab_node_t *node)
+{
+    pmecab_node_clone_t *xs_node;
+    Newz(1234, xs_node, 1, pmecab_node_clone_t);
     if (node->length <= 0)
         xs_node->surface = NULL;
     else {
@@ -85,9 +127,62 @@ deep_node_copy(mecab_node_t *node)
     xs_node->next = NULL;
     xs_node->prev = NULL;
 
-    xs_node->next = deep_node_copy(node->next);
-    if (xs_node->next != NULL)
-        xs_node->next->prev = xs_node;
+    return xs_node;
+}
+
+pmecab_node_clone_t *
+pmecab_deep_clone_node(mecab_node_t *node)
+{
+    pmecab_node_clone_head_t *xs_head;
+    pmecab_node_clone_t *xs_node;
+    pmecab_node_clone_t *cur_xs_node;
+    pmecab_node_clone_t *tmp_xs;
+    mecab_node_t *cur_node;
+    mecab_node_t *tmp;
+    if (node == NULL)
+        return NULL;
+
+    /* First, create the clone node list head. Then create the node that 
+     * requested to be cloned.
+     */
+    Newz(1234, xs_head, 1, pmecab_node_clone_head_t);
+
+    xs_node = pmecab_clone_node(node);
+    xs_node->head = xs_head;
+
+    cur_node = node->prev;
+    cur_xs_node = xs_node;
+    while (cur_node != NULL) {
+        tmp = cur_node->prev;
+        tmp_xs = pmecab_clone_node(cur_node);
+        tmp_xs->head = xs_head;
+
+        if (tmp == NULL) {
+            xs_head->first = tmp_xs;
+        }
+
+        cur_xs_node->prev = tmp_xs;
+        tmp_xs->next = cur_xs_node;
+
+        cur_node = tmp;
+        cur_xs_node = tmp_xs;
+    }
+
+    cur_node    = node;
+    cur_xs_node = xs_node;
+    while (cur_node != NULL) {
+        tmp = cur_node->next;
+        tmp_xs = pmecab_clone_node(cur_node);
+        tmp_xs->head = xs_head;
+        cur_xs_node->next = tmp_xs;
+        tmp_xs->prev = cur_xs_node;
+
+        cur_node = tmp;
+        cur_xs_node = tmp_xs;
+    }
+
+    xs_head->refcnt++;
+
     return xs_node;
 }
 
@@ -115,7 +210,7 @@ BOOT:
 
 SV *
 xs_new(class, args = NULL)
-        SV *class;
+        char *class;
         AV *args;
     PREINIT:
         SV *sv;
@@ -125,14 +220,22 @@ xs_new(class, args = NULL)
         int i;
         int len;
     CODE:
+#if 0
 #if MECAB_MAJOR_VERSION > 0 || MECAB_MINOR_VERSION >= 90
         av_push(args, newSVpv("--allocate-sentence", 0));
 #endif
+#endif
         len = av_len(args) + 1;
-        
+#if MECAB_MAJOR_VERSION == 0 && MECAB_MINOR_VERSION < 92
+        len++;
         Newz(1234, argv, len, char *);
-
+        for(i = 1; i < len; i++) {
+#else
+        PerlIO_printf(PerlIO_stdout(), "version == 0.92, len = %d\n", len);
+        if (len > 0)
+            Newz(1234, argv, len, char*);
         for(i = 0; i < len; i++) {
+#endif
             svr = av_fetch(args, i, 0);
             if (svr == NULL) {
                 Safefree(argv);
@@ -143,20 +246,25 @@ xs_new(class, args = NULL)
                 Safefree(argv);
                 croak("arguments must be simple scalars");
             }
-
+#if MECAB_MAJOR_VERSION == 0 && MECAB_MINOR_VERSION < 92
             argv[i + 1] = SvPV_nolen(*svr);
         }
         argv[0] = "perl-Text-MeCab";
+#else
+            argv[i] = SvPV_nolen(*svr);
+        }
+#endif
+        for (i = 0; i < len; i++) {
+            PerlIO_printf(PerlIO_stdout(), "argv[%d] = %s\n", i, argv[i]);
+        }
 
         mecab = mecab_new(len, argv);
+        if (mecab == NULL)
+            croak ("Failed to create mecab instance");
 
-        Safefree(argv);
-
-        sv = newSViv(PTR2IV(mecab));
-        sv = newRV_noinc(sv);
-        sv_bless(sv, gv_stashpv(SvPV_nolen(class), 1));
-        SvREADONLY_on(sv);
-
+        if (len > 0)
+            Safefree(argv);
+        XS_STRUCT2OBJ(sv, class, mecab);
         RETVAL = sv;
     OUTPUT:
         RETVAL
@@ -164,35 +272,19 @@ xs_new(class, args = NULL)
 SV *
 parse(self, text)
         SV *self;
-        SV *text;
+        char *text;
     PREINIT:
         SV *sv;
         mecab_t *mecab;
         mecab_node_t *node;
-        xs_mecab_node_t *xs_node;
-        char    *input;
-        STRLEN   len;
-        int      node_max;
     CODE:
         mecab = XS_STATE(mecab_t *, self);
-        input = SvPV(text, len);
-
-        if (len <= 0)
-            XSRETURN_UNDEF;
-
-        node = mecab_sparse_tonode(mecab, input);
-        if (! node) {
+        node = mecab_sparse_tonode(mecab, text);
+        if (node == NULL) {
             croak("mecab returned with error: %s", mecab_strerror(mecab));
         }
 
-        xs_node = deep_node_copy(node);
-        xs_node->refcnt = 1;
-
-        sv = newSViv(PTR2IV(xs_node));
-        sv = newRV_noinc(sv);
-        sv_bless(sv, gv_stashpv("Text::MeCab::Node", 1));
-        SvREADONLY_on(sv);
-
+        XS_STRUCT2OBJ(sv, "Text::MeCab::Node", node);
         RETVAL = sv;
     OUTPUT:
         RETVAL
@@ -211,39 +303,54 @@ MODULE = Text::MeCab    PACKAGE = Text::MeCab::Node
 PROTOTYPES: ENABLE
 
 SV *
+dclone(self)
+        SV *self;
+    PREINIT:
+        mecab_node_t *node;
+        pmecab_node_clone_t *xs_node;
+        SV *sv;
+    CODE:
+        node    = XS_STATE(mecab_node_t *, self);
+        xs_node = pmecab_deep_clone_node(node);
+        XS_STRUCT2OBJ(sv, "Text::MeCab::Node::Cloned", xs_node);
+        RETVAL = sv;
+    OUTPUT:
+        RETVAL
+
+unsigned int
 id(self)
         SV *self;
     PREINIT:
         SV *sv;
-        xs_mecab_node_t *node;
+        mecab_node_t *node;
     CODE:
-        node = XS_STATE(xs_mecab_node_t *, self);
-        RETVAL = newSViv(node->id);
+        node = XS_STATE(mecab_node_t *, self);
+        RETVAL = node->id;
     OUTPUT:
         RETVAL
 
-SV *
+unsigned int
 length(self)
         SV *self;
     PREINIT:
         SV *sv;
-        xs_mecab_node_t *node;
+        mecab_node_t *node;
     CODE:
-        node = XS_STATE(xs_mecab_node_t *, self);
-        RETVAL = newSViv(node->length);
+        node = XS_STATE(mecab_node_t *, self);
+        RETVAL = node->length;
     OUTPUT:
         RETVAL
 
-SV *
+unsigned int
 rlength(self)
         SV *self;
     PREINIT:
         SV *sv;
-        xs_mecab_node_t *node;
+        mecab_node_t *node;
     CODE:
 #if MECAB_MAJOR_VERSION > 0 || MECAB_MINOR_VERSION >= 90
-        node = XS_STATE(xs_mecab_node_t *, self);
-        RETVAL = newSViv(node->rlength);
+        node = XS_STATE(mecab_node_t *, self);
+        RETVAL = node->rlength;
 #else
         croak("rlength() is not available for mecab < 0.90");
 #endif
@@ -255,9 +362,273 @@ feature(self)
         SV *self;
     PREINIT:
         SV *sv;
-        xs_mecab_node_t *node;
+        mecab_node_t *node;
     CODE:
-        node = XS_STATE(xs_mecab_node_t *, self);
+        node = XS_STATE(mecab_node_t *, self);
+        RETVAL = newSVpvf("%s",node->feature);
+    OUTPUT:
+        RETVAL
+
+SV *
+surface(self)
+        SV *self;
+    PREINIT:
+        mecab_node_t *node;
+    CODE:
+        node = XS_STATE(mecab_node_t *, self);
+        if (node == NULL)
+            RETVAL = &PL_sv_undef;
+        else  {
+            if (node->length > 0) {
+                RETVAL = newSVpvn(node->surface, node->length);
+            } else {
+                RETVAL = newSVpv("", 0);
+            }
+        }
+    OUTPUT:
+        RETVAL
+
+SV *
+next(self)
+        SV *self;
+    PREINIT:
+        mecab_node_t *node;
+        SV *sv;
+    CODE:
+        node = XS_STATE(mecab_node_t *, self);
+        if (node->next == NULL)
+            XSRETURN_UNDEF;
+        else
+            XS_STRUCT2OBJ(sv, "Text::MeCab::Node", node->next);
+        RETVAL = sv;
+    OUTPUT:
+        RETVAL 
+
+SV *
+prev(self)
+        SV *self;
+    PREINIT:
+        mecab_node_t *node;
+        SV *sv;
+    CODE:
+        node = XS_STATE(mecab_node_t *, self);
+        if (node->prev == NULL)
+            XSRETURN_UNDEF;
+        else
+            XS_STRUCT2OBJ(sv, "Text::MeCab::Node", node->prev);
+        RETVAL = sv;
+    OUTPUT:
+        RETVAL
+
+unsigned short
+rcattr(self)
+        SV *self;
+    PREINIT:
+        mecab_node_t *node;
+    CODE:
+#if MECAB_MAJOR_VERSION > 0 || MECAB_MINOR_VERSION >= 90
+        node = XS_STATE(mecab_node_t *, self);
+        RETVAL = node->rcAttr;
+#else
+        croak("rcattr() not availabel for mecab < 0.90");
+#endif
+    OUTPUT:
+        RETVAL
+
+unsigned short
+lcattr(self)
+        SV *self;
+    PREINIT:
+        mecab_node_t *node;
+    CODE:
+#if MECAB_MAJOR_VERSION > 0 || MECAB_MINOR_VERSION >= 90
+        node = XS_STATE(mecab_node_t *, self);
+        RETVAL = node->lcAttr;
+#else
+        croak("lcattr() not available for mecab < 0.90");
+#endif
+    OUTPUT:
+        RETVAL
+
+unsigned short
+posid(self)
+        SV *self;
+    PREINIT:
+        mecab_node_t *node;
+    CODE:
+#if MECAB_MAJOR_VERSION > 0 || MECAB_MINOR_VERSION >= 90
+        node = XS_STATE(mecab_node_t *, self);
+        RETVAL = node->posid;
+#else
+        croak("posid() not available for mecab < 0.90");
+#endif
+    OUTPUT:
+        RETVAL
+
+unsigned char
+char_type(self)
+        SV *self;
+    PREINIT:
+        mecab_node_t *node;
+    CODE:
+#if MECAB_MAJOR_VERSION > 0 || MECAB_MINOR_VERSION >= 90
+        node = XS_STATE(mecab_node_t *, self);
+        RETVAL = node->char_type;
+#else
+        croak("char_type() not available for mecab < 0.90");
+#endif
+    OUTPUT:
+        RETVAL
+
+SV *
+stat(self)
+        SV *self;
+    PREINIT:
+        mecab_node_t *node;
+    CODE:
+        node = XS_STATE(mecab_node_t *, self);
+        RETVAL = newSViv(node->stat);
+    OUTPUT:
+        RETVAL
+
+SV *
+isbest(self)
+        SV *self;
+    PREINIT:
+        mecab_node_t *node;
+    CODE:
+#if MECAB_MAJOR_VERSION > 0 || MECAB_MINOR_VERSION >= 90
+        node = XS_STATE(mecab_node_t *, self);
+        RETVAL = node->isbest == 1 ? &PL_sv_yes : &PL_sv_no;
+#else
+        croak("isbest() not availale for mecab < 0.90");
+#endif
+    OUTPUT:
+        RETVAL
+
+float
+alpha(self)
+        SV *self;
+    PREINIT:
+        mecab_node_t *node;
+    CODE:
+#if MECAB_MAJOR_VERSION > 0 || MECAB_MINOR_VERSION >= 90
+        node = XS_STATE(mecab_node_t *, self);
+        RETVAL = node->alpha;
+#else
+        croak("alpha() not available for mecab < 0.90");
+#endif
+    OUTPUT:
+        RETVAL
+
+float
+beta(self)
+        SV *self;
+    PREINIT:
+        mecab_node_t *node;
+    CODE:
+#if MECAB_MAJOR_VERSION > 0 || MECAB_MINOR_VERSION >= 90
+        node = XS_STATE(mecab_node_t *, self);
+        RETVAL = node->beta;
+#else
+        croak("beta() not available for mecab < 0.90");
+#endif
+    OUTPUT:
+        RETVAL
+
+float
+prob(self)
+        SV *self;
+    PREINIT:
+        mecab_node_t *node;
+    CODE:
+#if MECAB_MAJOR_VERSION > 0 || MECAB_MINOR_VERSION >= 90
+        node = XS_STATE(mecab_node_t *, self);
+        RETVAL = node->prob;
+#else
+        croak("prob() not available for mecab < 0.90");
+#endif
+    OUTPUT:
+        RETVAL
+
+short
+wcost(self)
+        SV *self;
+    PREINIT:
+        mecab_node_t *node;
+    CODE:
+#if MECAB_MAJOR_VERSION > 0 || MECAB_MINOR_VERSION >= 90
+        node = XS_STATE(mecab_node_t *, self);
+        RETVAL = node->wcost;
+#else
+        croak("wcost() not available for mecab < 0.90");
+#endif
+    OUTPUT:
+        RETVAL
+
+long
+cost(self)
+        SV *self;
+    PREINIT:
+        mecab_node_t *node;
+    CODE:
+        node = XS_STATE(mecab_node_t *, self);
+        RETVAL = node->cost;
+    OUTPUT:
+        RETVAL
+
+MODULE = Text::MeCab    PACKAGE = Text::MeCab::Node::Cloned
+
+PROTOTYPES: ENABLE
+
+unsigned int
+id(self)
+        SV *self;
+    PREINIT:
+        SV *sv;
+        pmecab_node_clone_t *node;
+    CODE:
+        node = XS_STATE(pmecab_node_clone_t *, self);
+        RETVAL = node->id;
+    OUTPUT:
+        RETVAL
+
+unsigned int
+length(self)
+        SV *self;
+    PREINIT:
+        SV *sv;
+        pmecab_node_clone_t *node;
+    CODE:
+        node = XS_STATE(pmecab_node_clone_t *, self);
+        RETVAL = node->length;
+    OUTPUT:
+        RETVAL
+
+unsigned int
+rlength(self)
+        SV *self;
+    PREINIT:
+        SV *sv;
+        pmecab_node_clone_t *node;
+    CODE:
+#if MECAB_MAJOR_VERSION > 0 || MECAB_MINOR_VERSION >= 90
+        node = XS_STATE(pmecab_node_clone_t *, self);
+        RETVAL = node->rlength;
+#else
+        croak("rlength() is not available for mecab < 0.90");
+#endif
+    OUTPUT:
+        RETVAL
+
+SV *
+feature(self)
+        SV *self;
+    PREINIT:
+        SV *sv;
+        pmecab_node_clone_t *node;
+    CODE:
+        node = XS_STATE(pmecab_node_clone_t *, self);
         RETVAL = newSVpvf("%s",node->feature);
     OUTPUT:
         RETVAL
@@ -267,9 +638,12 @@ surface(self)
         SV *self;
     PREINIT:
         SV *sv;
-        xs_mecab_node_t *node;
+        pmecab_node_clone_t *node;
     CODE:
-        node = XS_STATE(xs_mecab_node_t *, self);
+        node = XS_STATE(pmecab_node_clone_t *, self);
+        if (node == NULL)
+            croak("Internal Text::MeCab::Node::Cloned struct is corrupted?");
+
         if (node->length > 0)
             RETVAL = newSVpvf("%s", node->surface);
         else
@@ -282,25 +656,16 @@ next(self)
         SV *self;
     PREINIT:
         SV *sv;
-        xs_mecab_node_t *node;
-        xs_mecab_node_t *head;
+        pmecab_node_clone_t *node;
     CODE:
-        node = XS_STATE(xs_mecab_node_t *, self);
+        node = XS_STATE(pmecab_node_clone_t *, self);
 
         if (node->next == NULL) {
-            sv = &PL_sv_undef;
+            XSRETURN_UNDEF;
         } else {
-            head = node;
-            while (head->prev)
-                head = head->prev;
-            head->refcnt++;
-
-            sv = newSViv(PTR2IV(node->next));
-            sv = newRV_noinc(sv);
-            sv_bless(sv, gv_stashpv("Text::MeCab::Node", 1));
-            SvREADONLY_on(sv);
+            node->head->refcnt++;
+            XS_STRUCT2OBJ(sv, "Text::MeCab::Node::Cloned", node->next);
         }
-
         RETVAL = sv;
     OUTPUT:
         RETVAL
@@ -310,7 +675,7 @@ enext(self)
         SV *self;
     PREINIT:
         SV *sv;
-        xs_mecab_node_t *node;
+        pmecab_node_clone_t *node;
     CODE:
         croak("Currently enext() unsupported");
     OUTPUT:
@@ -321,7 +686,7 @@ bnext(self)
         SV *self;
     PREINIT:
         SV *sv;
-        xs_mecab_node_t *node;
+        pmecab_node_clone_t *node;
     CODE:
         croak("Currently bnext() unsupported");
     OUTPUT:
@@ -332,54 +697,77 @@ prev(self)
         SV *self;
     PREINIT:
         SV *sv;
-        xs_mecab_node_t *node;
-        xs_mecab_node_t *head;
+        pmecab_node_clone_t *node;
+        pmecab_node_clone_t *head;
     CODE:
-        node = XS_STATE(xs_mecab_node_t *, self);
+        node = XS_STATE(pmecab_node_clone_t *, self);
         if (node->prev == NULL) {
-            sv = &PL_sv_undef;
+            XSRETURN_UNDEF;
         } else {
-            head = node;
-            while (head->prev)
-                head = head->prev;
-            head->refcnt++;
-
-            sv = newSViv(PTR2IV(node->prev));
-            sv = newRV_noinc(sv);
-            sv_bless(sv, gv_stashpv("Text::MeCab::Node", 1));
-            SvREADONLY_on(sv);
+            node->head->refcnt++;
+            XS_STRUCT2OBJ(sv, "Text::MeCab::Node::Cloned", node->prev);
         }
 
         RETVAL = sv;
     OUTPUT:
         RETVAL
 
-SV *
+unsigned short
 rcattr(self)
         SV *self;
     PREINIT:
-        xs_mecab_node_t *node;
+        pmecab_node_clone_t *node;
     CODE:
 #if MECAB_MAJOR_VERSION > 0 || MECAB_MINOR_VERSION >= 90
-        node = XS_STATE(xs_mecab_node_t *, self);
-        RETVAL = newSViv(node->rcAttr);
+        node = XS_STATE(pmecab_node_clone_t *, self);
+        RETVAL = node->rcAttr;
 #else
         croak("rcattr() not availabel for mecab < 0.90");
 #endif
     OUTPUT:
         RETVAL
 
-SV *
+unsigned short
 lcattr(self)
         SV *self;
     PREINIT:
-        xs_mecab_node_t *node;
+        pmecab_node_clone_t *node;
     CODE:
 #if MECAB_MAJOR_VERSION > 0 || MECAB_MINOR_VERSION >= 90
-        node = XS_STATE(xs_mecab_node_t *, self);
-        RETVAL = newSViv(node->lcAttr);
+        node = XS_STATE(pmecab_node_clone_t *, self);
+        RETVAL = node->lcAttr;
 #else
         croak("lcattr() not available for mecab < 0.90");
+#endif
+    OUTPUT:
+        RETVAL
+
+unsigned short
+posid(self)
+        SV *self;
+    PREINIT:
+        pmecab_node_clone_t *node;
+    CODE:
+#if MECAB_MAJOR_VERSION > 0 || MECAB_MINOR_VERSION >= 90
+        node = XS_STATE(pmecab_node_clone_t *, self);
+        RETVAL = node->posid;
+#else
+        croak("posid() not available for mecab < 0.90");
+#endif
+    OUTPUT:
+        RETVAL
+
+unsigned char
+char_type(self)
+        SV *self;
+    PREINIT:
+        pmecab_node_clone_t *node;
+    CODE:
+#if MECAB_MAJOR_VERSION > 0 || MECAB_MINOR_VERSION >= 90
+        node = XS_STATE(pmecab_node_clone_t *, self);
+        RETVAL = node->char_type;
+#else
+        croak("char_type() not available for mecab < 0.90");
 #endif
     OUTPUT:
         RETVAL
@@ -388,9 +776,9 @@ SV *
 stat(self)
         SV *self;
     PREINIT:
-        xs_mecab_node_t *node;
+        pmecab_node_clone_t *node;
     CODE:
-        node = XS_STATE(xs_mecab_node_t *, self);
+        node = XS_STATE(pmecab_node_clone_t *, self);
         RETVAL = newSViv(node->stat);
     OUTPUT:
         RETVAL
@@ -399,10 +787,10 @@ SV *
 isbest(self)
         SV *self;
     PREINIT:
-        xs_mecab_node_t *node;
+        pmecab_node_clone_t *node;
     CODE:
 #if MECAB_MAJOR_VERSION > 0 || MECAB_MINOR_VERSION >= 90
-        node = XS_STATE(xs_mecab_node_t *, self);
+        node = XS_STATE(pmecab_node_clone_t *, self);
         RETVAL = node->isbest == 1 ? &PL_sv_yes : &PL_sv_no;
 #else
         croak("isbest() not availale for mecab < 0.90");
@@ -410,99 +798,81 @@ isbest(self)
     OUTPUT:
         RETVAL
 
-SV *
+float
 alpha(self)
         SV *self;
     PREINIT:
-        xs_mecab_node_t *node;
+        pmecab_node_clone_t *node;
     CODE:
 #if MECAB_MAJOR_VERSION > 0 || MECAB_MINOR_VERSION >= 90
-        node = XS_STATE(xs_mecab_node_t *, self);
-        RETVAL = newSVnv(node->alpha);
+        node = XS_STATE(pmecab_node_clone_t *, self);
+        RETVAL = node->alpha;
 #else
         croak("alpha() not available for mecab < 0.90");
 #endif
     OUTPUT:
         RETVAL
 
-SV *
+float
 beta(self)
         SV *self;
     PREINIT:
-        xs_mecab_node_t *node;
+        pmecab_node_clone_t *node;
     CODE:
 #if MECAB_MAJOR_VERSION > 0 || MECAB_MINOR_VERSION >= 90
-        node = XS_STATE(xs_mecab_node_t *, self);
-        RETVAL = newSVnv(node->beta);
+        node = XS_STATE(pmecab_node_clone_t *, self);
+        RETVAL = node->beta;
 #else
         croak("beta() not available for mecab < 0.90");
 #endif
     OUTPUT:
         RETVAL
 
-SV *
+float
 prob(self)
         SV *self;
     PREINIT:
-        xs_mecab_node_t *node;
+        pmecab_node_clone_t *node;
     CODE:
 #if MECAB_MAJOR_VERSION > 0 || MECAB_MINOR_VERSION >= 90
-        node = XS_STATE(xs_mecab_node_t *, self);
-        RETVAL = newSVnv(node->prob);
+        node = XS_STATE(pmecab_node_clone_t *, self);
+        RETVAL = node->prob;
 #else
         croak("prob() not available for mecab < 0.90");
 #endif
     OUTPUT:
         RETVAL
 
-SV *
+short
 wcost(self)
         SV *self;
     PREINIT:
-        xs_mecab_node_t *node;
+        pmecab_node_clone_t *node;
     CODE:
 #if MECAB_MAJOR_VERSION > 0 || MECAB_MINOR_VERSION >= 90
-        node = XS_STATE(xs_mecab_node_t *, self);
-        RETVAL = newSViv(node->wcost);
+        node = XS_STATE(pmecab_node_clone_t *, self);
+        RETVAL = node->wcost;
 #else
         croak("wcost() not available for mecab < 0.90");
 #endif
     OUTPUT:
         RETVAL
 
-SV *
+long
 cost(self)
         SV *self;
     PREINIT:
-        xs_mecab_node_t *node;
+        pmecab_node_clone_t *node;
     CODE:
-        node = XS_STATE(xs_mecab_node_t *, self);
-        RETVAL = newSViv(node->cost);
+        node = XS_STATE(pmecab_node_clone_t *, self);
+        RETVAL = node->cost;
     OUTPUT:
         RETVAL
 
 void
 DESTROY(self)
         SV *self;
-    PREINIT:
-        xs_mecab_node_t *xs_node;
-        xs_mecab_node_t *tmp;
     CODE:
-        xs_node = XS_STATE(xs_mecab_node_t *, self);
-        if (xs_node->prev == NULL)
-            tmp = xs_node;
-        else {
-            tmp = xs_node;
-            while (tmp->prev != NULL) {
-                tmp = tmp->prev;
-            }
-        }
-
-        tmp->refcnt--;
-        if (tmp->refcnt == 0)
-            while (tmp != NULL) {
-                xs_node = tmp->next;
-                Safefree(tmp);
-                tmp = xs_node;
-            }
+        /* XXX FIXME XXX - I think this is totally broken */
+        pmecab_free_node(XS_STATE(pmecab_node_clone_t *, self));
 

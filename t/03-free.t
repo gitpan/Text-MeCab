@@ -15,11 +15,4 @@ my $text = "太郎は次郎が持っている本を花子に渡した。";
     $mecab = undef;
 }
 
-for(; $node; $node = $node->next) {
-    ok(defined $node->surface);
-    last unless $node->next;
-}
-
-for(; $node; $node = $node->prev) {
-    ok(defined $node->surface);
-}
+ok($node); # yes, node exists, but DO NOT use node->surface.

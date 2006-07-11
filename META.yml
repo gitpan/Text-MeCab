@@ -1,6 +1,6 @@
 ---
 name: Text-MeCab
-version: 0.08
+version: 0.09
 author:
   - |-
     (c) 2006 Daisuke Maki E<lt>dmaki@cpan.orgE<gt>
@@ -12,7 +12,7 @@ resources:
 provides:
   Text::MeCab:
     file: lib/Text/MeCab.pm
-    version: 0.08
+    version: 0.09
 generated_by: Module::Build version 0.2801
 meta-spec:
   url: http://module-build.sourceforge.net/META-spec-v1.2.html

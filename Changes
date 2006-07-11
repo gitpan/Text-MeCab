@@ -1,6 +1,15 @@
 Changes
 =======
 
+0.09 12 Jul 2006
+  - "Hey, it's the day before my birthday, but I'm releasing a new module" release
+  - Switch default behavior of Text::MeCab when it goes out of scope.
+    See "Text::MeCab AND SCOPE" section in Text::MeCab POD.
+    This all prompted by post at http://d.hatena.ne.jp/t-tkzw/20060710/p1.
+  - Add new Text::MeCab::Node::Cloned to workaround.
+  - Add warning about not using cloned node when Text::MeCab goes out of
+    scope.
+
 0.08 - 05 Jul 2006
   - Apply suggestions by charsbar when prompting for compile/link options
     for Win32

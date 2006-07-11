@@ -1,4 +1,4 @@
-# $Id: /mirror/Text-MeCab/trunk/lib/Text/MeCab.pm 124 2006-06-09T01:15:41.678498Z daisuke  $
+# $Id: /mirror/Text-MeCab/trunk/lib/Text/MeCab.pm 2035 2006-07-11T17:50:38.222225Z daisuke  $
 #
 # Copyright (c) 2006 Daisuke Maki <dmaki@cpan.org>
 # All rights reserved.
@@ -8,7 +8,7 @@ use strict;
 use vars qw($VERSION @ISA %EXPORT_TAGS @EXPORT_OK);
 BEGIN
 {
-    $VERSION = '0.08';
+    $VERSION = '0.09';
     if ($] > 5.006) {
         require XSLoader;
         XSLoader::load(__PACKAGE__, $VERSION);
@@ -109,6 +109,65 @@ WARNING: Please note that this module is primarily targetted for libmecab
 >= 0.90, so if things seem to be broken and your libmecab version is below
 0.90, then you might want to consider upgrading libmecab first.
 
+=head1 Text::MeCab AND SCOPING
+
+[NOTE: The memory management issue has been changed since 0.09]
+
+libmecab's default behavior is such that when you analyze a text and get a
+node back, that node is tied to the mecab "tagger" object that did the
+analysis. Therefore, when that tagger is destroyed via mecab_destroy(),
+all nodes that are associated to it are freed as well.
+
+Text::MeCab defaults to the same behavior, so the following won't work:
+
+  sub get_mecab_node {
+     my $mecab = Text::MeCab->new;
+     my $node  = $mecab->parse($_[0]);
+     return $node;
+  }
+
+  my $node = get_mecab_node($text);
+
+By the time get_mecab_node() returns, the Text::MeCab object is DESTROY'ed, 
+and so is $node (actually, the object exists, but it will complain when you
+try to access the nodes internals, because the C struct that was there
+has already been freed).
+
+In such cases, use the dclone() method. This will copy the *entire* node
+structure and create a new Text::MeCab::Node::Cloned instance. 
+
+  sub get_mecab_node {
+     my $mecab = Text::MeCab->new;
+     my $node  = $mecab->parse($_[0]);
+     return $node->dclone();
+  }
+
+The returned Text::MeCab::Node::Cloned object is exactly the same as 
+Text::MeCab::Node object on the surface. It just uses a different but
+very similar C struct underneath. It is blessed into a different namespace
+only because we need to use a different memory management strategy.
+
+Do be aware of the memory issue. You WILL use up twice as much memory.
+
+Also please note that if you try the first example, accessiing node WILL
+result in a segfauilt. This is not a bug: it's a feature :) While it is
+possible to control the memory management such that accessing a field in
+a node that has already expired results in a legal croak(), we do not go
+to the length to ensure this, because it will result in a performance
+penalty. 
+
+Just remember that unless you dclone() a node, then you are NOT allowed to
+access it when the original tagger goes out scope:
+
+   {
+       my $mecab = Text::MeCab->new;
+       $node = $mecab->parse(...);
+   }
+
+   $node->surface; # segfault!!!!
+
+Always remember to dclone() before doing this!
+
 =head1 METHODS
 
 =head2 new HASHREF | LIST
@@ -156,33 +215,6 @@ details about each option.
 =head2 parse SCALAR
 
 Parses the given text via mecab, and returns a Text::MeCab::Node object.
-
-=head1 NOTES ABOUT PARSED STRUCTURE
-
-Please note that Text::MeCab::parse() creates Text::MeCab::Node objects that 
-are C<detatched> from libmecab Tagger. This is to allow these Perl-ish idioms:
-
-  my $node;
-  {
-     my $mecab = Text::MeCab->new;
-     $node = $mecab->parse($text);
-     # $mecab goes out of scope
-  }
-
-  for(; $node; $node = $node->next) {
-     print $node->surface, "\n";
-  }
-
-and,
-
-  my $mecab  = Text::MeCab->new;
-  my $node_A = $mecab->parse($text_A);
-  my $node_B = $mecab->parse($text_B);
-
-If we are to use the mecab nodes directly we would have to carefully control
-the scope between the mecab tagger object and the nodes. Since this is perl,
-I chose maniplexity over efficiency. Let me know if there are problems with
-this approach.
 
 =head1 SEE ALSO
 

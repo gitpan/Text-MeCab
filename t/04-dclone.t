@@ -11,8 +11,8 @@ my $text_A = "太郎は次郎が持っている本を花子に渡した。";
 my $text_B = "すもももももももものうち。";
 my $mecab = Text::MeCab->new;
 
-my $node_A = $mecab->parse($text_A);
-my $node_B = $mecab->parse($text_B);
+my $node_A = $mecab->parse($text_A)->dclone;
+my $node_B = $mecab->parse($text_B)->dclone;
 
 # XXX - better be at least 5 nodes after parsing (this may actually depend
 # on the dictionary that you are using, but heck, if you are crazy enough

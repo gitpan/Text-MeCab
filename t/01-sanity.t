@@ -14,4 +14,16 @@ if (&Text::MeCab::MECAB_VERSION >= 0.90) {
     ok(eval { my $v = MECAB_EOS_NODE; 1 } && !$@, "MECAB_EOS_NODE ok");
 }
 
+# Make sure that what Text::MeCab::Node can, Text::MeCab::Node::Cloned
+# also can do.
+my @methods = (
+    qw(id surface feature length prev next stat cost),
+    qw(rlength rcattr lcattr posid char_type isbest alpha beta prob wcost)
+);
+foreach my $method (@methods) {
+    # test one by one to make it easier to read
+    can_ok("Text::MeCab::Node", $method);
+    can_ok("Text::MeCab::Node::Cloned", $method);
+}
+
 1;
