@@ -11,4 +11,4 @@ BEGIN {
     }
 }
 
-pod_coverage_ok('Text::MeCab', { trustme => [qr{^xs_new$}, qr{^MECAB_[A-Z_]+$}] });
+pod_coverage_ok('Text::MeCab', { trustme => [qr{^xs_}, qr{^MECAB_[A-Z_]+$}] });

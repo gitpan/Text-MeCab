@@ -1,6 +1,11 @@
 Changes
 =======
 
+0.10 14 Jul 2006
+  - remove spurfuluous parse_wakati.pl
+  - remove debug statements
+  - silence warnings
+
 0.09 12 Jul 2006
   - "Hey, it's the day before my birthday, but I'm releasing a new module" release
   - Switch default behavior of Text::MeCab when it goes out of scope.

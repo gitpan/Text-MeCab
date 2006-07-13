@@ -6,7 +6,6 @@ lib/Text/MeCab/Node.pod
 Makefile.PL
 MANIFEST			This list of files
 META.yml
-parse_wakati.pl
 README
 src/ppport.h
 t/01-sanity.t

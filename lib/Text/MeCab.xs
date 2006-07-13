@@ -1,4 +1,4 @@
-/* $Id: /mirror/Text-MeCab/trunk/lib/Text/MeCab.xs 2035 2006-07-11T17:50:38.222225Z daisuke  $
+/* $Id: /mirror/Text-MeCab/trunk/lib/Text/MeCab.xs 2078 2006-07-13T16:49:28.566602Z daisuke  $
  *
  * Copyright (c) 2006 Daisuke Maki <dmaki@cpan.org>
  * All rights reserved.
@@ -101,9 +101,13 @@ pmecab_clone_node(mecab_node_t *node)
     if (node->length <= 0)
         xs_node->surface = NULL;
     else {
-        Newz(1234, xs_node->surface, node->length + 1, char);
-        Copy(node->surface, xs_node->surface, node->length, char);
-        *(xs_node->surface + node->length) = '\0';
+        int len = node->length;
+        /* node->length is actually unsigned short, but what the heck.
+         * just case it off to an int.
+         */
+        Newz(1234, xs_node->surface, len + 1, char);
+        Copy(node->surface, xs_node->surface, len, char);
+        *(xs_node->surface + len) = '\0';
     }
 
     Newz(1234, xs_node->feature, strlen(node->feature), char);
@@ -215,7 +219,7 @@ xs_new(class, args = NULL)
     PREINIT:
         SV *sv;
         SV **svr;
-        char **argv;
+        char **argv = NULL;
         mecab_t *mecab;
         int i;
         int len;
@@ -231,7 +235,6 @@ xs_new(class, args = NULL)
         Newz(1234, argv, len, char *);
         for(i = 1; i < len; i++) {
 #else
-        PerlIO_printf(PerlIO_stdout(), "version == 0.92, len = %d\n", len);
         if (len > 0)
             Newz(1234, argv, len, char*);
         for(i = 0; i < len; i++) {
@@ -254,10 +257,6 @@ xs_new(class, args = NULL)
             argv[i] = SvPV_nolen(*svr);
         }
 #endif
-        for (i = 0; i < len; i++) {
-            PerlIO_printf(PerlIO_stdout(), "argv[%d] = %s\n", i, argv[i]);
-        }
-
         mecab = mecab_new(len, argv);
         if (mecab == NULL)
             croak ("Failed to create mecab instance");
@@ -321,7 +320,6 @@ unsigned int
 id(self)
         SV *self;
     PREINIT:
-        SV *sv;
         mecab_node_t *node;
     CODE:
         node = XS_STATE(mecab_node_t *, self);
@@ -333,7 +331,6 @@ unsigned int
 length(self)
         SV *self;
     PREINIT:
-        SV *sv;
         mecab_node_t *node;
     CODE:
         node = XS_STATE(mecab_node_t *, self);
@@ -345,7 +342,6 @@ unsigned int
 rlength(self)
         SV *self;
     PREINIT:
-        SV *sv;
         mecab_node_t *node;
     CODE:
 #if MECAB_MAJOR_VERSION > 0 || MECAB_MINOR_VERSION >= 90
@@ -361,7 +357,6 @@ SV *
 feature(self)
         SV *self;
     PREINIT:
-        SV *sv;
         mecab_node_t *node;
     CODE:
         node = XS_STATE(mecab_node_t *, self);
@@ -698,7 +693,6 @@ prev(self)
     PREINIT:
         SV *sv;
         pmecab_node_clone_t *node;
-        pmecab_node_clone_t *head;
     CODE:
         node = XS_STATE(pmecab_node_clone_t *, self);
         if (node->prev == NULL) {

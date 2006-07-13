@@ -54,9 +54,9 @@ Text::MeCab AND SCOPING
     [NOTE: The memory management issue has been changed since 0.09]
 
     libmecab's default behavior is such that when you analyze a text and get
-    a node back, that node is tied to the mecab "tagger" object that did the
-    analysis. Therefore, when that tagger is destroyed via mecab_destroy(),
-    all nodes that are associated to it are freed as well.
+    a node back, that node is tied to the mecab "tagger" object that
+    performed the analysis. Therefore, when that tagger is destroyed via
+    mecab_destroy(), all nodes that are associated to it are freed as well.
 
     Text::MeCab defaults to the same behavior, so the following won't work:
 
@@ -70,7 +70,7 @@ Text::MeCab AND SCOPING
 
     By the time get_mecab_node() returns, the Text::MeCab object is
     DESTROY'ed, and so is $node (actually, the object exists, but it will
-    complain when you try to access the nodes internals, because the C
+    complain when you try to access the node's internals, because the C
     struct that was there has already been freed).
 
     In such cases, use the dclone() method. This will copy the *entire* node
@@ -90,12 +90,12 @@ Text::MeCab AND SCOPING
 
     Do be aware of the memory issue. You WILL use up twice as much memory.
 
-    Also please note that if you try the first example, accessiing node WILL
-    result in a segfauilt. This is not a bug: it's a feature :) While it is
-    possible to control the memory management such that accessing a field in
-    a node that has already expired results in a legal croak(), we do not go
-    to the length to ensure this, because it will result in a performance
-    penalty.
+    Also please note that if you try the first example, accessing the node
+    *WILL* result in a segfault. This is *NOT* a bug: it's a feature :)
+    While it is possible to control the memory management such that
+    accessing a field in a node that has already expired results in a legal
+    croak(), we do not go to the length to ensure this, because it will
+    result in a performance penalty.
 
     Just remember that unless you dclone() a node, then you are NOT allowed
     to access it when the original tagger goes out scope:
