@@ -32,7 +32,7 @@ CODE
 my $build = $class->new(
     dist_name => 'Text-MeCab',
     dist_version_from => 'lib/Text/MeCab.pm',
-    extra_compiler_flags => [ split(/\s+/, $result->{cflags}) ],
+    extra_compiler_flags => [ split(/\s+/, $result->{cflags}), '-Wall' ],
     extra_linker_flags  => [ split(/\s+/, $result->{libs}) ],
     c_source => 'src',
     license => 'perl',

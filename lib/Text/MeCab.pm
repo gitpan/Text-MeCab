@@ -8,7 +8,7 @@ use strict;
 use vars qw($VERSION @ISA %EXPORT_TAGS @EXPORT_OK);
 BEGIN
 {
-    $VERSION = '0.10';
+    $VERSION = '0.11';
     if ($] > 5.006) {
         require XSLoader;
         XSLoader::load(__PACKAGE__, $VERSION);

@@ -1,6 +1,10 @@
 Changes
 =======
 
+0.11 14 Jul 2006
+  - Silence more warnings
+  - Force use of -Wall at compilation time
+
 0.10 14 Jul 2006
   - remove spurfuluous parse_wakati.pl
   - remove debug statements

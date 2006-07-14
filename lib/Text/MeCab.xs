@@ -580,7 +580,6 @@ unsigned int
 id(self)
         SV *self;
     PREINIT:
-        SV *sv;
         pmecab_node_clone_t *node;
     CODE:
         node = XS_STATE(pmecab_node_clone_t *, self);
@@ -592,7 +591,6 @@ unsigned int
 length(self)
         SV *self;
     PREINIT:
-        SV *sv;
         pmecab_node_clone_t *node;
     CODE:
         node = XS_STATE(pmecab_node_clone_t *, self);
@@ -604,7 +602,6 @@ unsigned int
 rlength(self)
         SV *self;
     PREINIT:
-        SV *sv;
         pmecab_node_clone_t *node;
     CODE:
 #if MECAB_MAJOR_VERSION > 0 || MECAB_MINOR_VERSION >= 90
@@ -620,7 +617,6 @@ SV *
 feature(self)
         SV *self;
     PREINIT:
-        SV *sv;
         pmecab_node_clone_t *node;
     CODE:
         node = XS_STATE(pmecab_node_clone_t *, self);
@@ -632,7 +628,6 @@ SV *
 surface(self)
         SV *self;
     PREINIT:
-        SV *sv;
         pmecab_node_clone_t *node;
     CODE:
         node = XS_STATE(pmecab_node_clone_t *, self);
@@ -665,27 +660,15 @@ next(self)
     OUTPUT:
         RETVAL
 
-SV *
-enext(self)
-        SV *self;
-    PREINIT:
-        SV *sv;
-        pmecab_node_clone_t *node;
+void
+enext()
     CODE:
         croak("Currently enext() unsupported");
-    OUTPUT:
-        RETVAL
 
-SV *
-bnext(self)
-        SV *self;
-    PREINIT:
-        SV *sv;
-        pmecab_node_clone_t *node;
+void
+bnext()
     CODE:
         croak("Currently bnext() unsupported");
-    OUTPUT:
-        RETVAL
 
 SV *
 prev(self)
@@ -867,6 +850,5 @@ void
 DESTROY(self)
         SV *self;
     CODE:
-        /* XXX FIXME XXX - I think this is totally broken */
         pmecab_free_node(XS_STATE(pmecab_node_clone_t *, self));
 
