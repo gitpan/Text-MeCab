@@ -1,5 +1,5 @@
 #!perl
-# $Id: /mirror/Text-MeCab/trunk/Build.PL 1621 2006-07-05T08:42:36.916180Z daisuke  $
+# $Id: /mirror/Text-MeCab/trunk/Build.PL 2079 2006-07-15T03:24:27.238091Z daisuke  $
 #
 # Copyright (c) 2006 Daisuke Maki <dmaki@cpan.org>
 # All rights reserved.

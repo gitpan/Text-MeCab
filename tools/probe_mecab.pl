@@ -1,5 +1,5 @@
 #!perl
-# $Id: /mirror/Text-MeCab/trunk/tools/probe_mecab.pl 1621 2006-07-05T08:42:36.916180Z daisuke  $
+# $Id: /mirror/Text-MeCab/trunk/tools/probe_mecab.pl 2081 2006-07-15T03:36:09.816096Z daisuke  $
 #
 # Copyright (c) 2006 Daisuke Maki <dmaki@cpan.org>
 # All rights reserved.
@@ -28,13 +28,13 @@ EOM
     chomp($version);
     die "no version specified! cowardly refusing to proceed." unless $version;
 
-    print "Additional compiler flags (e.g. -DWin32 -Ic:\\path\\to\\mecab)? [] ";
+    print "Additional compiler flags (e.g. -DWIN32 -Ic:\\path\\to\\mecab\\sdk)? [] ";
     if ($interactive) {
         $cflags = <STDIN>;
         chomp($cflags);
     }
 
-    print "Additional linker flags (e.g. -lc:\\path\\to\\mecab\\libmecab.lib? [] ";
+    print "Additional linker flags (e.g. -lc:\\path\\to\\mecab\\sdk\\libmecab.lib? [] ";
     if ($interactive) {
         $libs = <STDIN>;
         chomp($libs);
@@ -91,5 +91,61 @@ if ($libs) {
 } else {
     print "No linker flags specified\n";
 }
+
+my $encoding = 'euc-jp';
+print 
+    "Text::MeCab needs to know what encoding you built your dictionary with\n",
+    "to properly execute tests.\n",
+    "\n",
+    "Encoding of your mecab dictionary? (shift_jis, euc-jp, utf8) [$encoding] "
+;
+
+if ($interactive) {
+    my $input = <STDIN>;
+    chomp $input;
+    if ($input) {
+        $encoding = $input;
+    }
+}
+
+my $encoding_ok = 1;
+if (! eval { require Encode }) {
+    $encoding_ok = 0;
+    print 
+        "!!! WARNING !!!\n",
+        "\n",
+        "We were unable to load Encode.pm to convert the test data to $encoding.\n",
+        "This may result in a test failure if you are using a dictionary encoding\n",
+        "other than euc-jp.\n\n"
+    ;
+}
+
+my %data = (
+    taro => "太郎は次郎が持っている本を花子に渡した。",
+    sumomo => "すもももももももものうち。"
+);
+if ($encoding_ok) {
+    foreach my $key (keys %data) {
+        Encode::from_to($data{$key}, 'euc-jp', $encoding);
+    }
+}
+
+open my $fh, '>', 't/strings.dat';
+if (eval { require Data::Dump }) {
+    print $fh Data::Dump::dump(\%data);
+} elsif (eval { require Data::Dumper }) {
+    local $Data::Dumper::Indent   = 1;
+    local $Data::Dumper::Sortkeys = 1;
+    local $Data::Dumper::Terse    = 1;
+    print $fh Data::Dumper::Dumper(\%data);
+} else {
+    print
+        "Couldn't load Data::Dump or Data::Dumper!\n",
+        "Refusing to proceed\n";
+    exit 1;
+}
+close $fh;
+
+print "Using $encoding as your dictionary encoding\n";
 
 return { cflags => $cflags, libs => $libs };

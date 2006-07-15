@@ -8,10 +8,10 @@ BEGIN
 }
 
 my $node;
-my $text = "太郎は次郎が持っている本を花子に渡した。";
+my $data = do 't/strings.dat'; die if $@;
 {
     my $mecab = Text::MeCab->new;
-    $node = $mecab->parse($text);
+    $node = $mecab->parse($data->{taro});
     $mecab = undef;
 }
 

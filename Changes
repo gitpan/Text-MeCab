@@ -1,6 +1,11 @@
 Changes
 =======
 
+0.12 15 Jul 2006
+  - Apply "Poor Puppy" patch from Kenichi Ishigaki (charsbar)
+  - Properly ask for the dictionary encoding when running perl Build.PL.
+    This will create t/strings.dat with that encoding.
+
 0.11 14 Jul 2006
   - Silence more warnings
   - Force use of -Wall at compilation time

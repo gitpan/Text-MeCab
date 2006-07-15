@@ -1,4 +1,4 @@
-/* $Id: /mirror/Text-MeCab/trunk/lib/Text/MeCab.xs 2078 2006-07-13T16:49:28.566602Z daisuke  $
+/* $Id: /mirror/Text-MeCab/trunk/lib/Text/MeCab.xs 2079 2006-07-15T03:24:27.238091Z daisuke  $
  *
  * Copyright (c) 2006 Daisuke Maki <dmaki@cpan.org>
  * All rights reserved.
@@ -231,9 +231,8 @@ xs_new(class, args = NULL)
 #endif
         len = av_len(args) + 1;
 #if MECAB_MAJOR_VERSION == 0 && MECAB_MINOR_VERSION < 92
-        len++;
-        Newz(1234, argv, len, char *);
-        for(i = 1; i < len; i++) {
+        Newz(1234, argv, len + 1, char *);
+        for(i = 0; i < len; i++) {
 #else
         if (len > 0)
             Newz(1234, argv, len, char*);
