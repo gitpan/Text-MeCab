@@ -1,5 +1,5 @@
 #!perl
-# $Id: /mirror/Text-MeCab/trunk/tools/probe_mecab.pl 2081 2006-07-15T03:36:09.816096Z daisuke  $
+# $Id: probe_mecab.pl 23 2006-07-15 03:36:09Z daisuke $
 #
 # Copyright (c) 2006 Daisuke Maki <dmaki@cpan.org>
 # All rights reserved.
@@ -9,6 +9,9 @@ use File::Spec;
 
 my $interactive = -t STDIN && (-t STDOUT || !(-f STDOUT || -c STDOUT)) ;
 my($version, $cflags, $libs);
+
+$cflags = '';
+
 # Save the poor puppies that run on Windows
 if ($^O eq 'MSWin32') {
     print <<EOM;
@@ -82,11 +85,18 @@ if ($version < 0.90) {
 }
 
 my($major, $minor, $micro) = map { s/\D+//g; $_ } split(/\./, $version);
+
 $cflags .= " -DMECAB_MAJOR_VERSION=$major -DMECAB_MINOR_VERSION=$minor";
+
+# remove whitespaces from beginning and ending of strings
+$cflags =~ s/^\s+//;
+$cflags =~ s/\s+$//;
 
 print "Using compiler flags '$cflags'...\n";
 
 if ($libs) {
+    $libs =~ s/^\s+//;
+    $libs =~ s/\s+$//;
     print "Using linker flags '$libs'...\n";
 } else {
     print "No linker flags specified\n";

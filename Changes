@@ -1,6 +1,10 @@
 Changes
 =======
 
+0.13 08 Aug 2006
+  - Fix tools/probe_mecab.pl so that there are not spurfulous whitespaces
+    around the flags (http://d.hatena.ne.jp/t-tkzw/20060730/p2).
+
 0.12 15 Jul 2006
   - Apply "Poor Puppy" patch from Kenichi Ishigaki (charsbar)
   - Properly ask for the dictionary encoding when running perl Build.PL.

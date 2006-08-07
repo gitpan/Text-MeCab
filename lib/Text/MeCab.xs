@@ -1,4 +1,4 @@
-/* $Id: /mirror/Text-MeCab/trunk/lib/Text/MeCab.xs 2079 2006-07-15T03:24:27.238091Z daisuke  $
+/* $Id: MeCab.xs 21 2006-07-15 03:24:27Z daisuke $
  *
  * Copyright (c) 2006 Daisuke Maki <dmaki@cpan.org>
  * All rights reserved.

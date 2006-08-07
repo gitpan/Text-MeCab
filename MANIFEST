@@ -14,5 +14,6 @@ t/03-free.t
 t/04-dclone.t
 t/99-pod-coverage.t
 t/99-pod.t
+t/strings.dat
 tools/benchmark.pl
 tools/probe_mecab.pl

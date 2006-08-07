@@ -1,4 +1,4 @@
-# $Id: /mirror/Text-MeCab/trunk/lib/Text/MeCab.pm 2081 2006-07-15T03:36:09.816096Z daisuke  $
+# $Id: MeCab.pm 23 2006-07-15 03:36:09Z daisuke $
 #
 # Copyright (c) 2006 Daisuke Maki <dmaki@cpan.org>
 # All rights reserved.
@@ -8,7 +8,7 @@ use strict;
 use vars qw($VERSION @ISA %EXPORT_TAGS @EXPORT_OK);
 BEGIN
 {
-    $VERSION = '0.12';
+    $VERSION = '0.13';
     if ($] > 5.006) {
         require XSLoader;
         XSLoader::load(__PACKAGE__, $VERSION);
