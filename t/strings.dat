@@ -1,0 +1,4 @@
+{
+  sumomo => pack("H*","a4b9a4e2a4e2a4e2a4e2a4e2a4e2a4e2a4e2a4cea4a6a4c1a1a3"),
+  taro   => pack("H*","c2c0cfbaa4cfbca1cfbaa4acbbfda4c3a4c6a4a4a4ebcbdca4f2b2d6bbd2a4cbc5cfa4b7a4bfa1a3"),
+}
