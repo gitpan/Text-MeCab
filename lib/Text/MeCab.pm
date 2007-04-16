@@ -8,7 +8,7 @@ use strict;
 use vars qw($VERSION @ISA %EXPORT_TAGS @EXPORT_OK);
 BEGIN
 {
-    $VERSION = '0.15';
+    $VERSION = '0.16';
     if ($] > 5.006) {
         require XSLoader;
         XSLoader::load(__PACKAGE__, $VERSION);
@@ -35,6 +35,8 @@ sub new
 {
     my $class = shift;
     my @args;
+    my $output_format_type_override;
+
     if (ref($_[0]) ne 'HASH') {
         @args = @_;
     } else {
@@ -42,6 +44,7 @@ sub new
         while (my ($key, $value) = each %args) {
             $key =~ s/_/-/g;
             my $l_key = "--$key";
+
             if ($bool_options{$l_key}) {
                 push @args, $l_key;
             } else {
@@ -109,6 +112,22 @@ WARNING: Please note that this module is primarily targetted for libmecab
 >= 0.90, so if things seem to be broken and your libmecab version is below
 0.90, then you might want to consider upgrading libmecab first.
 
+=head1 Text::MeCab AND FORMATS
+
+mecab allows users to specify an output format, via --*-format options.
+These are respected ONLY if you use the format() method:
+
+  my $mecab = Text::MeCab->new({
+    output_format_type => "user",
+    node_format => "%m %pn"
+  });
+
+  for(my $node = $mecab->parse($text); $node; $node = $node->next) {
+    print $node->format($mecab);
+  }
+
+Note that you also need to set the output_format_type parameter as well.
+
 =head1 Text::MeCab AND SCOPING
 
 [NOTE: The memory management issue has been changed since 0.09]
@@ -167,6 +186,15 @@ access it when the original tagger goes out scope:
    $node->surface; # segfault!!!!
 
 Always remember to dclone() before doing this!
+
+=head1 PERFORMANCE
+
+Belows is the result of running tools/benchmark.pl on my PowerBook:
+
+  daisuke@beefcake Text-MeCab$ perl tools/benchmark.pl 
+               Rate      mecab text_mecab
+  mecab      5.53/s         --       -63%
+  text_mecab 14.9/s       170%         --
 
 =head1 METHODS
 

@@ -1,7 +1,16 @@
 use strict;
-use Test::More qw(no_plan);
-use MeCab;
-use Text::MeCab;
+use Test::More skip_all => "TODO";
+
+BEGIN
+{
+    eval "use MeCab";
+    if ($@) {
+        plan skip_all => "SWIG MeCab not available";
+    } else {
+        plan tests => 2;
+        use_ok("Text::MeCab");
+    }
+}
 
 my $text = "今日は晴れ";
 
@@ -29,4 +38,4 @@ my $xs_result = '';
     }
 }
 
-is $swig_result, $xs_result;
+is $xs_result, $swig_result;

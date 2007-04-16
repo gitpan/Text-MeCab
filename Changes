@@ -1,6 +1,10 @@
 Changes
 =======
 
+0.15_01 16 Apr 2007
+  - Change the internal C structure to be thin wrappers around mecab_node_t
+  - Implement a node->format() method
+
 0.15 29 Jan 2007
   - 0.14 had upload problems. Repackage.
 
