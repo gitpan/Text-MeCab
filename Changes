@@ -1,7 +1,10 @@
 Changes
 =======
 
-0.15_01 16 Apr 2007
+0.17 01 May 2007
+  - Fixup stupid Copy() problem.
+
+0.16 16 Apr 2007
   - Change the internal C structure to be thin wrappers around mecab_node_t
   - Implement a node->format() method
 

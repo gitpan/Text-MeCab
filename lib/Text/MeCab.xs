@@ -1,4 +1,4 @@
-/* $Id: /mirror/Text-MeCab/lib/Text/MeCab.xs 3093 2006-07-15T03:24:27.238091Z daisuke  $
+/* $Id: /mirror/Text-MeCab/lib/Text/MeCab.xs 6618 2007-04-16T06:12:59.796844Z daisuke  $
  *
  * Copyright (c) 2006 Daisuke Maki <dmaki@cpan.org>
  * All rights reserved.
@@ -86,7 +86,6 @@ pmecab_clone_node(mecab_node_t *node)
          */
         Newz(1234, xs_node->actual->surface, len + 1, char);
         Copy(node->surface, xs_node->actual->surface, len, char);
-        *(xs_node->actual->surface + len) = '\0';
     }
 
     Newz(1234, xs_node->actual->feature, strlen(node->feature), char);
