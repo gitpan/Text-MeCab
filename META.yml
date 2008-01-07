@@ -1,7 +1,7 @@
 # http://module-build.sourceforge.net/META-spec.html
 #XXXXXXX This is a prototype!!!  It will change in the future!!! XXXXX#
 name:         Text-MeCab
-version:      0.20000_01
+version:      0.20000
 version_from: lib/Text/MeCab.pm
 installdirs:  site
 requires:
