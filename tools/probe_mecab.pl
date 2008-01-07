@@ -1,7 +1,7 @@
 #!perl
-# $Id: /mirror/Text-MeCab/tools/probe_mecab.pl 3096 2006-08-07T16:14:21.712070Z daisuke  $
+# $Id: /mirror/perl/Text-MeCab/trunk/tools/probe_mecab.pl 38046 2008-01-06T12:44:20.889262Z daisuke  $
 #
-# Copyright (c) 2006 Daisuke Maki <dmaki@cpan.org>
+# Copyright (c) 2006-2008 Daisuke Maki <daisuke@endeworks.jp>
 # All rights reserved.
 
 use strict;
@@ -102,12 +102,12 @@ if ($libs) {
     print "No linker flags specified\n";
 }
 
-my $encoding = 'euc-jp';
+my $encoding = 'utf-8';
 print 
     "Text::MeCab needs to know what encoding you built your dictionary with\n",
     "to properly execute tests.\n",
     "\n",
-    "Encoding of your mecab dictionary? (shift_jis, euc-jp, utf8) [$encoding] "
+    "Encoding of your mecab dictionary? (shift_jis, euc-jp, utf-8) [$encoding] "
 ;
 
 if ($interactive) {
@@ -118,44 +118,6 @@ if ($interactive) {
     }
 }
 
-my $encoding_ok = 1;
-if (! eval { require Encode }) {
-    $encoding_ok = 0;
-    print 
-        "!!! WARNING !!!\n",
-        "\n",
-        "We were unable to load Encode.pm to convert the test data to $encoding.\n",
-        "This may result in a test failure if you are using a dictionary encoding\n",
-        "other than euc-jp.\n\n"
-    ;
-}
-
-my %data = (
-    taro => "太郎は次郎が持っている本を花子に渡した。",
-    sumomo => "すもももももももものうち。"
-);
-if ($encoding_ok) {
-    foreach my $key (keys %data) {
-        Encode::from_to($data{$key}, 'euc-jp', $encoding);
-    }
-}
-
-open my $fh, '>', 't/strings.dat';
-if (eval { require Data::Dump }) {
-    print $fh Data::Dump::dump(\%data);
-} elsif (eval { require Data::Dumper }) {
-    local $Data::Dumper::Indent   = 1;
-    local $Data::Dumper::Sortkeys = 1;
-    local $Data::Dumper::Terse    = 1;
-    print $fh Data::Dumper::Dumper(\%data);
-} else {
-    print
-        "Couldn't load Data::Dump or Data::Dumper!\n",
-        "Refusing to proceed\n";
-    exit 1;
-}
-close $fh;
-
 print "Using $encoding as your dictionary encoding\n";
 
-return { cflags => $cflags, libs => $libs };
+return { version => $version, cflags => $cflags, libs => $libs, encoding => $encoding };

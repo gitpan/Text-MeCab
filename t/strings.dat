@@ -1,4 +1,7 @@
-{
-  sumomo => pack("H*","a4b9a4e2a4e2a4e2a4e2a4e2a4e2a4e2a4e2a4cea4a6a4c1a1a3"),
-  taro   => pack("H*","c2c0cfbaa4cfbca1cfbaa4acbbfda4c3a4c6a4a4a4ebcbdca4f2b2d6bbd2a4cbc5cfa4b7a4bfa1a3"),
+do {
+  require MIME::Base64;
+  {
+    sumomo => pack("H*","e38199e38282e38282e38282e38282e38282e38282e38282e38282e381aee38186e381a1e38082"),
+    taro   => MIME::Base64::decode("5aSq6YOO44Gv5qyh6YOO44GM5oyB44Gj44Gm44GE44KL5pys44KS6Iqx5a2Q44Gr5rih44GX44Gf44CC"),
+  };
 }

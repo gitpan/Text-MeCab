@@ -1,14 +1,17 @@
-# $Id: /mirror/Text-MeCab/lib/Text/MeCab.pm 6618 2007-04-16T06:12:59.796844Z daisuke  $
+# $Id: /mirror/coderepos/lang/perl/Text-MeCab/trunk/lib/Text/MeCab.pm 38117 2008-01-07T00:02:59.679302Z daisuke  $
 #
-# Copyright (c) 2006 Daisuke Maki <dmaki@cpan.org>
+# Copyright (c) 2006-2008 Daisuke Maki <daisuke@endeworks.jp>
 # All rights reserved.
 
 package Text::MeCab;
 use strict;
-use vars qw($VERSION @ISA %EXPORT_TAGS @EXPORT_OK);
+use warnings;
+use 5.006;
+use Exporter 'import';
+our ($VERSION, @ISA, %EXPORT_TAGS, @EXPORT_OK);
 BEGIN
 {
-    $VERSION = '0.17';
+    $VERSION = '0.20000_01';
     if ($] > 5.006) {
         require XSLoader;
         XSLoader::load(__PACKAGE__, $VERSION);
@@ -18,14 +21,11 @@ BEGIN
         __PACKAGE__->bootstrap;
     }
 
-    require Exporter;
-    push @ISA, 'Exporter';
-
     %EXPORT_TAGS = (all => [ qw(MECAB_NOR_NODE MECAB_UNK_NODE MECAB_BOS_NODE MECAB_EOS_NODE) ]);
     @EXPORT_OK = map { @$_ } values %EXPORT_TAGS;
 }
 
-my %bool_options = (
+my %BOOLEAN_OPTIONS = (
     map { ($_, 'bool') } qw(
         --all-morphs --partial --allocate-sentence --version --help
     )
@@ -34,26 +34,23 @@ my %bool_options = (
 sub new
 {
     my $class = shift;
-    my @args;
-    my $output_format_type_override;
 
-    if (ref($_[0]) ne 'HASH') {
-        @args = @_;
-    } else {
-        my %args = %{$_[0]};
-        while (my ($key, $value) = each %args) {
-            $key =~ s/_/-/g;
-            my $l_key = "--$key";
+    my %args = ref $_[0] eq 'HASH' ? %{$_[0]} : @_;
+    $args{'allocate-sentence'} = 1;
 
-            if ($bool_options{$l_key}) {
-                push @args, $l_key;
-            } else {
-                push @args, "$l_key=$value";
-            }
+    my @args = ('perl-TextMeCab');
+    while (my($key, $value) = each %args) {
+        $key =~ s/_/-/g;
+        $key =~ s/^/--/;
+
+        if (exists $BOOLEAN_OPTIONS{$key}) {
+            push @args, $key;
+        } else {
+            push @args, join('=', $key, $value);
         }
     }
 
-    return $class->xs_new(\@args);
+    $class->_XS_new(\@args);
 }
 
 1;
@@ -108,9 +105,7 @@ making the perl interface through a tied hash is just... weird.
 
 So Text::MeCab gives you a more natural, Perl-ish way to access libmecab!
 
-WARNING: Please note that this module is primarily targetted for libmecab
->= 0.90, so if things seem to be broken and your libmecab version is below
-0.90, then you might want to consider upgrading libmecab first.
+WARNING: Version 0.20000 has only been tested against libmecab 0.96.
 
 =head1 Text::MeCab AND FORMATS
 
@@ -244,13 +239,46 @@ details about each option.
 
 Parses the given text via mecab, and returns a Text::MeCab::Node object.
 
+=head2 ENCODING
+
+  my $encoding = Text::MeCab::ENCODING
+
+Returns the encoding of the underlying mecab library that was detected at
+compile time.
+
+=head2 MECAB_VERSION
+
+The version number from libmecab's mecab_version()
+
+=head2 MECAB_TARGET_VERSION
+
+=head2 MECAB_TARGET_MAJOR_VERSION
+
+=head2 MECAB_TARGET_MINOR_VERSION
+
+The version number detected at compile time of Text::MeCab. 
+
+=head2 MECAB_NOR_NODE
+
+=head2 MECAB_UNK_NODE
+
+=head2 MECAB_BOS_NODE
+
+=head2 MECAB_EOS_NODE
+
+=head2 MECAB_USR_DIC
+
+=head2 MECAB_SYS_DIC
+
+=head2 MECAB_UNK_DIC
+
 =head1 SEE ALSO
 
 http://mecab.sourceforge.ne.jp
 
 =head1 AUTHOR
 
-(c) 2006 Daisuke Maki E<lt>dmaki@cpan.orgE<gt>
+Copyright (c) 2006-2008 Daisuke Maki E<lt>daisuke@endeworks.jpE<gt>
 All rights reserved.
 
 =cut
