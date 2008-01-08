@@ -1,5 +1,5 @@
 #!perl
-# $Id: /mirror/coderepos/lang/perl/Text-MeCab/trunk/Makefile.PL 38114 2008-01-06T23:39:11.724418Z daisuke  $
+# $Id: /mirror/coderepos/lang/perl/Text-MeCab/trunk/Makefile.PL 38268 2008-01-08T23:36:45.704325Z daisuke  $
 #
 # Copyright (c) 2006-2008 Daisuke Maki <daisuke@endeworks.jp>
 # All rights reserved.
@@ -27,6 +27,14 @@ print
     "   libs: $result->{libs}\n"
 ;
 
+# XXX - I want to include this in future releases, but I don't know if
+# it works with Win32 properly (i.e., untested)
+# use Devel::CheckLib;
+# check_lib_or_exit(
+#     lib  => 'mecab',
+#     LIBS => join(' ', split(/\s+/, $result->{libs})),
+# );
+
 $result->{cflags} ||= '';
 $result->{cflags} .= ' -I src';
 
@@ -49,10 +57,11 @@ my %INFO = (
     NAME         => 'Text::MeCab',
     OBJECT       => '$(O_FILES)',
     PREREQ_PM    => {
-        'Encode'     => 0,
-        'Exporter'   => 0,
-        'File::Spec' => 0,
-        'Test::More' => 0,
+#        'Devel::CheckLib' => 0,
+        'Encode'          => 0,
+        'Exporter'        => 0,
+        'File::Spec'      => 0,
+        'Test::More'      => 0,
     },
     VERSION_FROM => 'lib/Text/MeCab.pm',
     clean        => {

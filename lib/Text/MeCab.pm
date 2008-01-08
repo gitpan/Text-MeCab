@@ -1,4 +1,4 @@
-# $Id: /mirror/coderepos/lang/perl/Text-MeCab/trunk/lib/Text/MeCab.pm 38198 2008-01-07T15:00:29.398847Z daisuke  $
+# $Id: /mirror/coderepos/lang/perl/Text-MeCab/trunk/lib/Text/MeCab.pm 38270 2008-01-08T23:38:13.941110Z daisuke  $
 #
 # Copyright (c) 2006-2008 Daisuke Maki <daisuke@endeworks.jp>
 # All rights reserved.
@@ -11,7 +11,7 @@ use Exporter 'import';
 our ($VERSION, @ISA, %EXPORT_TAGS, @EXPORT_OK);
 BEGIN
 {
-    $VERSION = '0.20000';
+    $VERSION = '0.20001';
     if ($] > 5.006) {
         require XSLoader;
         XSLoader::load(__PACKAGE__, $VERSION);
