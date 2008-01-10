@@ -1,5 +1,5 @@
 #!perl
-# $Id: /mirror/coderepos/lang/perl/Text-MeCab/trunk/Makefile.PL 38268 2008-01-08T23:36:45.704325Z daisuke  $
+# $Id: /mirror/coderepos/lang/perl/Text-MeCab/trunk/Makefile.PL 38367 2008-01-10T02:43:59.531344Z daisuke  $
 #
 # Copyright (c) 2006-2008 Daisuke Maki <daisuke@endeworks.jp>
 # All rights reserved.
@@ -41,7 +41,10 @@ $result->{cflags} .= ' -I src';
 # Hack. I don't like the layout where .xs files are on the top level.
 link("lib/Text/MeCab.xs", "MeCab.xs");
 
-my @define = ( "-DTEXT_MECAB_ENCODING='\"$result->{encoding}\"'" );
+my @define = (
+    "-DTEXT_MECAB_ENCODING='\"$result->{encoding}\"'",
+    "-DTEXT_MECAB_CONFIG='\"$result->{config}\"'",
+);
 if ($debugging) {
     push @define, "-DTEXT_MECAB_DEBUG=1";
 }
@@ -58,10 +61,13 @@ my %INFO = (
     OBJECT       => '$(O_FILES)',
     PREREQ_PM    => {
 #        'Devel::CheckLib' => 0,
-        'Encode'          => 0,
-        'Exporter'        => 0,
-        'File::Spec'      => 0,
-        'Test::More'      => 0,
+        'Class::Accessor::Fast' => 0,
+        'Encode'                => 0,
+        'Exporter'              => 0,
+        'File::Spec'            => 0,
+        'Test::More'            => 0,
+        'Text::CSV_XS'          => 0,
+        'Path::Class'           => 0,
     },
     VERSION_FROM => 'lib/Text/MeCab.pm',
     clean        => {

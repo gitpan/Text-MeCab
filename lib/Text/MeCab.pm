@@ -1,4 +1,4 @@
-# $Id: /mirror/coderepos/lang/perl/Text-MeCab/trunk/lib/Text/MeCab.pm 38270 2008-01-08T23:38:13.941110Z daisuke  $
+# $Id: /mirror/coderepos/lang/perl/Text-MeCab/trunk/lib/Text/MeCab.pm 38368 2008-01-10T02:45:40.503566Z daisuke  $
 #
 # Copyright (c) 2006-2008 Daisuke Maki <daisuke@endeworks.jp>
 # All rights reserved.
@@ -11,7 +11,7 @@ use Exporter 'import';
 our ($VERSION, @ISA, %EXPORT_TAGS, @EXPORT_OK);
 BEGIN
 {
-    $VERSION = '0.20001';
+    $VERSION = '0.20002';
     if ($] > 5.006) {
         require XSLoader;
         XSLoader::load(__PACKAGE__, $VERSION);
@@ -268,6 +268,10 @@ The version number detected at compile time of Text::MeCab.
 =head2 MECAB_SYS_DIC
 
 =head2 MECAB_UNK_DIC
+
+=head2 MECAB_CONFIG
+
+Path to mecab-config, if available.
 
 =head1 SEE ALSO
 
