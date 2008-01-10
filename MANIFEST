@@ -1,4 +1,5 @@
 Changes
+eg/add_custom.pl
 lib/Text/MeCab.pm
 lib/Text/MeCab.xs
 lib/Text/MeCab/Dict.pm

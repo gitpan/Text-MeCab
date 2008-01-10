@@ -1,6 +1,6 @@
 --- #YAML:1.0
 name:                Text-MeCab
-version:             0.20003
+version:             0.20004
 abstract:            Alternative Interface To libmecab
 license:             ~
 author:              
@@ -14,7 +14,6 @@ requires:
     File::Spec:                    0
     Path::Class:                   0
     Test::More:                    0
-    Text::CSV_XS:                  0
 meta-spec:
     url:     http://module-build.sourceforge.net/META-spec-v1.3.html
     version: 1.3

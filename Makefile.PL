@@ -1,5 +1,5 @@
 #!perl
-# $Id: /mirror/coderepos/lang/perl/Text-MeCab/trunk/Makefile.PL 38367 2008-01-10T02:43:59.531344Z daisuke  $
+# $Id: /mirror/coderepos/lang/perl/Text-MeCab/trunk/Makefile.PL 38377 2008-01-10T06:11:07.199376Z daisuke  $
 #
 # Copyright (c) 2006-2008 Daisuke Maki <daisuke@endeworks.jp>
 # All rights reserved.
@@ -66,7 +66,6 @@ my %INFO = (
         'Exporter'              => 0,
         'File::Spec'            => 0,
         'Test::More'            => 0,
-        'Text::CSV_XS'          => 0,
         'Path::Class'           => 0,
     },
     VERSION_FROM => 'lib/Text/MeCab.pm',
