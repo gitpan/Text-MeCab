@@ -1,6 +1,7 @@
 Changes
 lib/Text/MeCab.pm
 lib/Text/MeCab.xs
+lib/Text/MeCab/Dict.pm
 lib/Text/MeCab/Node.pod
 Makefile.PL
 MANIFEST			This list of files
