@@ -1,6 +1,6 @@
 --- #YAML:1.0
 name:                Text-MeCab
-version:             0.20004
+version:             0.20005
 abstract:            Alternative Interface To libmecab
 license:             ~
 author:              
