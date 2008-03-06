@@ -1,5 +1,5 @@
 #!perl
-# $Id: /mirror/coderepos/lang/perl/Text-MeCab/trunk/Makefile.PL 38377 2008-01-10T06:11:07.199376Z daisuke  $
+# $Id: /mirror/coderepos/lang/perl/Text-MeCab/trunk/Makefile.PL 43372 2008-03-06T14:22:59.206270Z charsbar  $
 #
 # Copyright (c) 2006-2008 Daisuke Maki <daisuke@endeworks.jp>
 # All rights reserved.
@@ -45,6 +45,14 @@ my @define = (
     "-DTEXT_MECAB_ENCODING='\"$result->{encoding}\"'",
     "-DTEXT_MECAB_CONFIG='\"$result->{config}\"'",
 );
+
+if ($^O eq 'MSWin32') { # save us, the Win32 puppies
+    @define = (
+        qq(-DTEXT_MECAB_ENCODING=\\"$result->{encoding}\\"),
+        qq(-DTEXT_MECAB_CONFIG=\\"$result->{config}\\"),
+    );
+}
+
 if ($debugging) {
     push @define, "-DTEXT_MECAB_DEBUG=1";
 }
