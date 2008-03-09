@@ -8,7 +8,7 @@ use strict;
 use File::Spec;
 use ExtUtils::MakeMaker;
 
-my($version, $cflags, $libs, $mecab_config);
+my($version, $cflags, $libs, $include, $mecab_config);
 
 $cflags = '';
 $mecab_config = '';
@@ -25,6 +25,7 @@ if ($^O eq 'MSWin32') {
             "     against. (e.g. 0.90)",
             "  2. Additional compiler flags that you may have built libmecab with, and",
             "  3. Additional linker flags that you may have build libmecab with.",
+            "  4. Location where mecab.h header file may be found",
             "",
             "Since we can't auto-probe, you should specify the above three to proceed",
             "with compilation:",
@@ -35,9 +36,10 @@ if ($^O eq 'MSWin32') {
     chomp $version;
     die "no version specified! cowardly refusing to proceed." unless $version;
 
-    $cflags = prompt("Additional compiler flags (e.g. -DWIN32 -Ic:\\path\\to\\mecab\\sdk)? []");
+    $cflags  = prompt("Additional compiler flags (e.g. -DWIN32 -Ic:\\path\\to\\mecab\\sdk)? []");
 
-    $libs = prompt("Additional linker flags (e.g. -lc:\\path\\to\\mecab\\sdk\\libmecab.lib? [] ");
+    $libs    = prompt("Additional linker flags (e.g. -lc:\\path\\to\\mecab\\sdk\\libmecab.lib)? [] ");
+    $include = prompt("Directory containing mecab.h (e.g. c:\\path\\to\\include)? [] ");
 } else {
     # try probing in places where we expect it to be
     my $default_config;
@@ -64,6 +66,8 @@ if ($^O eq 'MSWin32') {
 
     $libs   = `$mecab_config --libs`;
     chomp($libs);
+    $include = `$mecab_config --inc-dir`;
+    chomp $include;
 }
 
 print "detected mecab version $version\n";
@@ -110,6 +114,7 @@ return {
     version  => $version,
     cflags   => $cflags,
     libs     => $libs,
+    include  => $include,
     encoding => $encoding,
     config   => $mecab_config,
 };

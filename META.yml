@@ -1,8 +1,8 @@
 --- #YAML:1.0
 name:                Text-MeCab
-version:             0.20006
+version:             0.20007
 abstract:            Alternative Interface To libmecab
-license:             ~
+license:             perl
 author:              
     - Daisuke Maki <daisuke@endeworks.jp>
 generated_by:        ExtUtils::MakeMaker version 6.42
