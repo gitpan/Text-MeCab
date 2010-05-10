@@ -6,7 +6,7 @@ use Exporter 'import';
 our ($VERSION, @ISA, %EXPORT_TAGS, @EXPORT_OK);
 BEGIN
 {
-    $VERSION = '0.20007_01';
+    $VERSION = '0.20008';
     if ($] > 5.006) {
         require XSLoader;
         XSLoader::load(__PACKAGE__, $VERSION);
@@ -45,7 +45,7 @@ sub new
         }
     }
 
-    $class->_XS_new(\@args);
+    $class->_xs_create(\@args);
 }
 
 1;
