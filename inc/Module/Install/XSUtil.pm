@@ -3,7 +3,7 @@ package Module::Install::XSUtil;
 
 use 5.005_03;
 
-$VERSION = '0.23';
+$VERSION = '0.24';
 
 use Module::Install::Base;
 @ISA     = qw(Module::Install::Base);
@@ -86,18 +86,26 @@ sub _is_msvc{
     my $cc_available;
 
     sub cc_available {
-        return $cc_available if defined $cc_available;
+        return defined $cc_available ?
+            $cc_available :
+            ($cc_available = shift->can_cc())
+        ;
+    }
+
+    my $want_xs;
+    sub want_xs {
+        my $default = @_ ? shift : 1; # you're using this module, you /must/ want XS by default
+        return $want_xs if defined $want_xs;
 
         foreach my $arg(@ARGV){
             if($arg eq '--pp'){
-                return $cc_available = 0;
+                return $want_xs = 0;
             }
             elsif($arg eq '--xs'){
-                return $cc_available = 1;
+                return $want_xs = 1;
             }
         }
-
-        return $cc_available = shift->can_cc();
+        return $want_xs = $default;
     }
 }
 
@@ -172,7 +180,6 @@ sub cc_append_to_inc{
     for my $dir(@dirs){
         unless(-d $dir){
             warn("'$dir' not found: $!\n");
-            exit;
         }
 
         _verbose "inc: -I$dir" if _VERBOSE;
@@ -190,19 +197,10 @@ sub cc_append_to_inc{
     return;
 }
 
-
 sub cc_libs {
-    goto &cc_append_to_libs;
-}
+    my ($self, @libs) = @_;
 
-sub cc_append_to_libs{
-    my($self, @libs) = @_;
-
-    $self->_xs_initialize();
-
-    my $mm = $self->makemaker_args;
-
-    my $libs = join q{ }, map{
+    @libs = map{
         my($name, $dir) = ref($_) eq 'ARRAY' ? @{$_} : ($_, undef);
         my $lib;
         if(defined $dir) {
@@ -211,18 +209,58 @@ sub cc_append_to_libs{
         else {
             $lib = '';
         }
-        $lib .= ($name =~ /^-/ ? qq{$name } : qq{-l$name});
+        $lib .= ($name =~ /^-/ ? qq{$name} : qq{-l$name});
         _verbose "libs: $lib" if _VERBOSE;
         $lib;
     } @libs;
 
-    if($mm->{LIBS}){
+    $self->cc_append_to_libs( @libs );
+}
+
+sub cc_append_to_libs{
+    my($self, @libs) = @_;
+
+    $self->_xs_initialize();
+
+    return unless @libs;
+
+    my $libs = join q{ }, @libs;
+
+    my $mm = $self->makemaker_args;
+
+    if ($mm->{LIBS}){
         $mm->{LIBS} .= q{ } . $libs;
     }
     else{
         $mm->{LIBS} = $libs;
     }
     return $libs;
+}
+
+sub cc_assert_lib {
+    my ($self, @dcl_args) = @_;
+
+    if ( ! $self->{xsu_loaded_checklib} ) {
+        my $loaded_lib = 0;
+        foreach my $checklib qw(inc::Devel::CheckLib Devel::CheckLib) {
+            eval "use $checklib 0.4";
+            if (!$@) {
+                $loaded_lib = 1;
+                last;
+            }
+        }
+
+        if (! $loaded_lib) {
+            warn "Devel::CheckLib not found in inc/ nor \@INC";
+            exit 0;
+        }
+
+        $self->{xsu_loaded_checklib}++;
+        $self->configure_requires( "Devel::CheckLib" => "0.4" );
+        $self->build_requires( "Devel::CheckLib" => "0.4" );
+    }
+
+    Devel::CheckLib::check_lib_or_exit(@dcl_args);
 }
 
 sub cc_append_to_ccflags{
@@ -544,4 +582,4 @@ sub const_cccmd {
 1;
 __END__
 
-#line 714
+#line 774
