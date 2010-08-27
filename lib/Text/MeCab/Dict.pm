@@ -75,7 +75,7 @@ sub write
 
     my @columns = qw(
         surface left_id right_id cost pos category1 category2 category3 
-        inflect inflect_type original yomi pronounse 
+        inflect inflect_type original yomi pronounce 
     );
     foreach my $entry (@$entries) {
         my @values = map { 
@@ -98,8 +98,8 @@ sub write
     my $fh;
     open( $fh, '>>', $file ) or
         die "Could not open file $file for append writing: $!";
-    $fh->print(encode($self->input_encoding, join("\n", @output, "")));
-    $fh->close;
+    print $fh encode($self->input_encoding, join("\n", @output, ""));
+    close $fh;
 
     $self->entries([]);
 }
@@ -139,7 +139,7 @@ use base qw(Class::Accessor::Fast);
 
 __PACKAGE__->mk_accessors($_) for qw(
     surface left_id right_id cost pos category1 category2 category3 
-    inflect inflect_type original yomi pronounse extra
+    inflect inflect_type original yomi pronounce extra
 );
 
 sub new
