@@ -16,7 +16,7 @@ BEGIN
         __PACKAGE__->bootstrap;
     }
 
-    %EXPORT_TAGS = (all => [ qw(__TEXT_MECAB_CONSTANTS__) ]);
+    %EXPORT_TAGS = (all => [ qw(MECAB_BOS_NODE MECAB_EON_NODE MECAB_EOS_NODE MECAB_NOR_NODE MECAB_SYS_DIC MECAB_UNK_DIC MECAB_UNK_NODE MECAB_USR_DIC) ]);
     @EXPORT_OK = map { @$_ } values %EXPORT_TAGS;
 }
 
@@ -250,7 +250,21 @@ The version number from libmecab's mecab_version()
 
 The version number detected at compile time of Text::MeCab. 
 
-__TEXT_MECAB_CONSTANTS_POD__
+=head2 MECAB_BOS_NODE
+
+=head2 MECAB_EON_NODE
+
+=head2 MECAB_EOS_NODE
+
+=head2 MECAB_NOR_NODE
+
+=head2 MECAB_SYS_DIC
+
+=head2 MECAB_UNK_DIC
+
+=head2 MECAB_UNK_NODE
+
+=head2 MECAB_USR_DIC
 
 =head2 MECAB_CONFIG
 

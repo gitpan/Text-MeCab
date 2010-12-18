@@ -3,11 +3,7 @@ abstract: 'Alternate Interface To libmecab'
 author:
   - '-2008 Daisuke Maki <daisuke@endeworks.jp>'
 build_requires:
-  Devel::PPPort: 3.19
   ExtUtils::MakeMaker: 6.42
-  ExtUtils::ParseXS: 2.21
-  Test::More: 0.84
-  Test::Requires: 0
 configure_requires:
   Devel::PPPort: 3.19
   ExtUtils::MakeMaker: 6.42
@@ -33,4 +29,4 @@ requires:
 resources:
   license: http://dev.perl.org/licenses/
   repository: git://github.com/lestrrat/Text-MeCab.git
-version: 0.20010
+version: 0.20011
