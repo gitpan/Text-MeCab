@@ -30,7 +30,6 @@ test_requires 'Test::More', 0.84;
 test_requires 'Test::Requires';
 tests 't/*.t t/*/*.t';
 author_tests 'xt';
-auto_include;
 WriteAll;
 
 sub cc_append_to_libs_mine ($) {
@@ -73,10 +72,7 @@ sub check_lib
     my $config = shift;
 
     if (! $RUNNING_IN_HELL) {
-        local @INC = @INC;
-        unshift @INC, 'inc';
-        require Devel::CheckLib;
-        Devel::CheckLib::check_lib_or_exit(
+        checklibs(
             lib  => 'mecab',
             LIBS => $config->{libs},
         );
