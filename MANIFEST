@@ -1,5 +1,4 @@
 Changes
-custom.csv
 eg/add_custom.pl
 inc/Devel/CheckLib.pm
 inc/Module/Install.pm
@@ -19,9 +18,7 @@ lib/Text/MeCab/Dict.pm
 lib/Text/MeCab/Node.pod
 Makefile.PL
 MANIFEST			This list of files
-MeCab.src
 META.yml
-ppport.h
 t/01-sanity.t
 t/node/01_load.t
 t/node/02_api.t

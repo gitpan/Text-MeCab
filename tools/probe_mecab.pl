@@ -2,7 +2,23 @@
 
 use strict;
 use File::Spec;
+use Getopt::Long;
 use ExtUtils::MakeMaker ();
+
+my $default_encoding = 'euc-jp';
+my $default_config;
+if (! GetOptions(
+    "encoding=s" => \$default_encoding,
+    "mecab-config=s" => \$default_config,
+)) {
+    exit 1;
+}
+
+# XXX Silly hack
+local *STDIN = *STDIN;
+if ($ENV{TRAVIS_TEST}) {
+    close STDIN;
+}
 
 my($version, $cflags, $libs, $include, $mecab_config);
 
@@ -36,22 +52,23 @@ if ($^O eq 'MSWin32') {
         exit;
     }
 
-    $cflags  = prompt("Additional compiler flags (e.g. -DWIN32 -Ic:\\path\\to\\mecab\\sdk)? []");
+    $cflags  = ExtUtils::MakeMaker::prompt("Additional compiler flags (e.g. -DWIN32 -Ic:\\path\\to\\mecab\\sdk)? []");
 
-    $libs    = prompt("Additional linker flags (e.g. -lc:\\path\\to\\mecab\\sdk\\libmecab.lib)? [] ");
-    $include = prompt("Directory containing mecab.h (e.g. c:\\path\\to\\include)? [] ");
+    $libs    = ExtUtils::MakeMaker::prompt("Additional linker flags (e.g. -lc:\\path\\to\\mecab\\sdk\\libmecab.lib)? [] ");
+    $include = ExtUtils::MakeMaker::prompt("Directory containing mecab.h (e.g. c:\\path\\to\\include)? [] ");
 } else {
     # try probing in places where we expect it to be
-    my $default_config;
-    foreach my $path (qw(/usr/bin /usr/local/bin /opt/local/bin)) {
-        my $tmp = File::Spec->catfile($path, 'mecab-config');
-        if (-f $tmp && -x _) {
-            $default_config = $tmp;
-            last;
+    if (! defined $default_config || ! -x $default_config) {
+        foreach my $path (qw(/usr/bin /usr/local/bin /opt/local/bin)) {
+            my $tmp = File::Spec->catfile($path, 'mecab-config');
+            if (-f $tmp && -x _) {
+                $default_config = $tmp;
+                last;
+            }
         }
     }
 
-    $mecab_config = prompt( "Path to mecab config?", $default_config );
+    $mecab_config = ExtUtils::MakeMaker::prompt( "Path to mecab config?", $default_config );
 
     if (!-f $mecab_config || ! -x _) {
         print STDERR "Can't proceed without mecab-config. Aborting...\n";
@@ -95,8 +112,7 @@ if ($libs) {
     print "No linker flags specified\n";
 }
 
-my $default_encoding = 'euc-jp';
-my $encoding = prompt(
+my $encoding = ExtUtils::MakeMaker::prompt(
     join(
         "\n",
         "",

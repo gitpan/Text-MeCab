@@ -6,7 +6,7 @@ use Exporter 'import';
 our ($VERSION, @ISA, %EXPORT_TAGS, @EXPORT_OK);
 BEGIN
 {
-    $VERSION = '0.20013';
+    $VERSION = '0.20014';
     if ($] > 5.006) {
         require XSLoader;
         XSLoader::load(__PACKAGE__, $VERSION);
@@ -16,7 +16,23 @@ BEGIN
         __PACKAGE__->bootstrap;
     }
 
-    %EXPORT_TAGS = (all => [ qw(MECAB_BOS_NODE MECAB_EON_NODE MECAB_EOS_NODE MECAB_NOR_NODE MECAB_SYS_DIC MECAB_UNK_DIC MECAB_UNK_NODE MECAB_USR_DIC) ]);
+    %EXPORT_TAGS = (all => [ qw(
+        MECAB_NOR_NODE
+        MECAB_UNK_NODE
+        MECAB_BOS_NODE
+        MECAB_EOS_NODE
+        MECAB_EON_NODE
+        MECAB_SYS_DIC
+        MECAB_USR_DIC
+        MECAB_UNK_DIC
+        MECAB_ONE_BEST
+        MECAB_NBEST
+        MECAB_PARTIAL
+        MECAB_MARGINAL_PROB
+        MECAB_ALTERNATIVE
+        MECAB_ALL_MORPHS
+        MECAB_ALLOCATE_SENTENCE
+    ) ]);
     @EXPORT_OK = map { @$_ } values %EXPORT_TAGS;
 }
 
@@ -208,7 +224,7 @@ details about each option.
 =item B<output_format_type>
 
 =item B<partial>
-
+t
 =item B<node_format>
 
 =item B<unk_format>
@@ -227,48 +243,76 @@ details about each option.
 
 =back
 
-=head2 parse SCALAR
+=head2 $node = $tagger-E<gt>parse(SCALAR)
 
 Parses the given text via mecab, and returns a Text::MeCab::Node object.
 
-=head2 ENCODING
+=head2 $version = Text::MeCab::version()
+
+The version number, as returned by libmecab's mecab_version();
+
+=head2 CONSTANTS
+
+=over 4
+
+=item ENCODING
 
   my $encoding = Text::MeCab::ENCODING
 
 Returns the encoding of the underlying mecab library that was detected at
 compile time.
 
-=head2 MECAB_VERSION
+=item MECAB_VERSION
 
-The version number from libmecab's mecab_version()
+The version number, same as Text::MeCab::version()
 
-=head2 MECAB_TARGET_VERSION
-
-=head2 MECAB_TARGET_MAJOR_VERSION
-
-=head2 MECAB_TARGET_MINOR_VERSION
+=item MECAB_TARGET_VERSION
 
 The version number detected at compile time of Text::MeCab. 
 
-=head2 MECAB_BOS_NODE
+=item MECAB_TARGET_MAJOR_VERSION
 
-=head2 MECAB_EON_NODE
+The version number detected at compile time of Text::MeCab. 
 
-=head2 MECAB_EOS_NODE
+=item MECAB_TARGET_MINOR_VERSION
 
-=head2 MECAB_NOR_NODE
+The version number detected at compile time of Text::MeCab. 
 
-=head2 MECAB_SYS_DIC
-
-=head2 MECAB_UNK_DIC
-
-=head2 MECAB_UNK_NODE
-
-=head2 MECAB_USR_DIC
-
-=head2 MECAB_CONFIG
+=item MECAB_CONFIG
 
 Path to mecab-config, if available.
+
+=item MECAB_NOR_NODE
+
+=item MECAB_UNK_NODE
+
+=item MECAB_BOS_NODE
+
+=item MECAB_EOS_NODE
+
+=item MECAB_EON_NODE
+
+=item MECAB_SYS_DIC
+
+=item MECAB_USR_DIC
+
+=item MECAB_UNK_DIC
+
+=item MECAB_ONE_BEST
+
+=item MECAB_NBEST
+
+=item MECAB_PARTIAL
+
+=item MECAB_MARGINAL_PROB
+
+=item MECAB_ALTERNATIVE
+
+=item MECAB_ALL_MORPHS
+
+=item MECAB_ALLOCATE_SENTENCE
+
+=back
 
 =head1 SEE ALSO
 
