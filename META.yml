@@ -35,4 +35,4 @@ requires:
 resources:
   license: http://dev.perl.org/licenses/
   repository: git://github.com/lestrrat/Text-MeCab.git
-version: 0.20015
+version: 0.20016

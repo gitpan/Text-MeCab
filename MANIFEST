@@ -31,6 +31,7 @@ t/tagger/01_load.t
 t/tagger/02_api.t
 t/tagger/03_basic.t
 tools/benchmark.pl
+tools/genfiles.pl
 tools/probe_mecab.pl
 xs/MeCab.xs
 xs/text-mecab-clone.c
